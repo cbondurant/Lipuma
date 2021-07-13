@@ -53,11 +53,6 @@ namespace Lipuma
 
 		void setInnerEnd(QPointF);
 
-		// Get frequency of crossing the zero per unit
-		float getFrequency();
-		void setFrequency(float);
-
-
 		friend std::ostream& operator<<(std::ostream& os, const FractalCurve& dt);
 
 	private:
@@ -72,8 +67,6 @@ namespace Lipuma
 		QPointF start, end;
 
 		BezierCurve curve;
-
-		float frequency;
 		qint32 seed;
 		static std::default_random_engine rand;
 	};

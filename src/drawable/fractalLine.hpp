@@ -46,10 +46,6 @@ namespace Lipuma
 		// Set the endpoint of the line in canvas space
 		void setEnd(QPointF);
 
-		// Get frequency of crossing the zero per unit
-		float getFrequency();
-		void setFrequency(float);
-
 	private:
 		QPainterPath generatePath() const;
 		FastNoise::SmartNode<FastNoise::Fractal<>> noise;
@@ -60,8 +56,6 @@ namespace Lipuma
 		EditPoint *startPt, *endPt;
 
 		QPointF start, end;
-
-		float frequency;
 		int seed;
 		static std::default_random_engine rand;
 	};

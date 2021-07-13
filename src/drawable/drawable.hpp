@@ -6,6 +6,7 @@
 
 
 namespace Lipuma {
+
 	enum DrawableSerializeTypes: qint8 {SerializeFractalLine, SerializeFractalCurve};
 	class Drawable : public QGraphicsObject {
 	public:
@@ -15,9 +16,11 @@ namespace Lipuma {
 		void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,QWidget *widget) override;
 		int type() const override;
 		static qint8 drawableType();
+		virtual void setFrequency(qreal);
+		virtual qreal getFrequency() const;
 
 	private:
-
+		qreal frequency;
 	};
 }
 

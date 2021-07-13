@@ -27,7 +27,7 @@ namespace Lipuma {
 		setFlag(QGraphicsItem::ItemIsSelectable);
 		noise = FastNoise::New<FastNoise::FractalFBm>();
 		noise->SetSource(FastNoise::New<FastNoise::Simplex>());
-		frequency = 0.02;
+		setFrequency(0.02);
 		noise->SetOctaveCount(5);
 		noise->SetLacunarity(2.0f);
 		noise->SetGain(.9);
@@ -98,7 +98,7 @@ namespace Lipuma {
 		os << mapToScene(innerStartPt->pos());
 		os << mapToScene(innerEndPt->pos());
 
-		os << frequency;
+		os << getFrequency();
 	}
 	QPainterPath FractalCurve::shape() const
 	{
@@ -118,7 +118,7 @@ namespace Lipuma {
 		const int POINTS = std::max(static_cast<int>(length / PERIOD), 2);
 		// Dont draw really really short lines
 		std::vector<float> curveNoise = std::vector<float>(((POINTS + 8) / 8) * 8); // Round to nearest multiple of 8, fastnoise runs better with it
-		noise->GenUniformGrid2D(curveNoise.data(), 0, 0, ((POINTS + 8) / 8) * 8, 1, frequency, seed);
+		noise->GenUniformGrid2D(curveNoise.data(), 0, 0, ((POINTS + 8) / 8) * 8, 1, getFrequency(), seed);
 
 		// Generate path
 		QPainterPath path;
@@ -172,11 +172,6 @@ namespace Lipuma {
 		prepareGeometryChange();
 	}
 
-	float FractalCurve::getFrequency()
-	{
-		return frequency;
-	}
-
 	QVariant FractalCurve::itemChange(GraphicsItemChange change, const QVariant &val)
 	{
 		QGraphicsItem::itemChange(change, val);
@@ -188,13 +183,6 @@ namespace Lipuma {
 			innerEndPt->setVisible(val.toBool());
 		}
 		return val;
-	}
-
-	void FractalCurve::setFrequency(float f)
-	{
-		frequency = f;
-		prepareGeometryChange();
-		update();
 	}
 
 	void FractalCurve::paint(QPainter *painter, const QStyleOptionGraphicsItem * /* option */, QWidget * /* widget */)

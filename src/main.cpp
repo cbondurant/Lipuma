@@ -9,12 +9,13 @@
 #include "widget/canvas.hpp"
 
 #include "widget/toolSelector.hpp"
+#include "widget/propertiesMenu.hpp"
 #include "file/serializer.hpp"
 
 int main (int argc, char **argv){
 	QApplication a(argc, argv);
-	QGraphicsScene scene;
-	Lipuma::Canvas *canvas = new Lipuma::Canvas(&scene);
+	QGraphicsScene *scene = new QGraphicsScene();
+	Lipuma::Canvas *canvas = new Lipuma::Canvas(scene);
 	QMainWindow *mainWin = new QMainWindow();
 	mainWin->setCentralWidget(canvas);
 	QMenu* fileMenu = mainWin->menuBar()->addMenu("File");
@@ -45,6 +46,12 @@ int main (int argc, char **argv){
 	QObject::connect(selector, &Lipuma::ToolSelector::toolSelected, canvas, &Lipuma::Canvas::toolSelected);
 	dock->setWidget(selector);
 	mainWin->addDockWidget(Qt::LeftDockWidgetArea, dock);
+
+	QDockWidget *rightDock = new QDockWidget();
+	Lipuma::PropertiesMenu *menu = new Lipuma::PropertiesMenu(canvas, rightDock);
+	QObject::connect(scene, &QGraphicsScene::selectionChanged, menu, &Lipuma::PropertiesMenu::selectionUpdated);
+	mainWin->addDockWidget(Qt::RightDockWidgetArea, rightDock);
+	rightDock->setWidget(menu);
 
 	mainWin->show();
 	return a.exec();

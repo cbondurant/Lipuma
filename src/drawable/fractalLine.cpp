@@ -12,6 +12,7 @@
 #include <QWidget>
 
 #include "drawable/editPoint.hpp"
+#include "drawable/drawableProperties.hpp"
 #include "math/points.hpp"
 
 namespace Lipuma
@@ -22,7 +23,7 @@ namespace Lipuma
 	void FractalLine::initalizeNoise(){
 		noise = FastNoise::New<FastNoise::FractalFBm>();
 		noise->SetSource(FastNoise::New<FastNoise::Simplex>());
-		frequency = 0.02;
+		setData(DrawableProperty::Frequency, 0.02);
 		noise->SetOctaveCount(5);
 		noise->SetLacunarity(2.0f);
 		noise->SetGain(.9);
@@ -58,7 +59,9 @@ namespace Lipuma
 		setStart(pt);
 		stream >> pt;
 		setEnd(pt);
-		stream >> frequency;
+		float freq;
+		stream >> freq;
+		setFrequency(freq);
 	}
 
 	void FractalLine::write(QDataStream& stream){
@@ -66,7 +69,7 @@ namespace Lipuma
 		stream << seed;
 		stream << mapToScene(start);
 		stream << mapToScene(end);
-		stream << frequency;
+		stream << getFrequency();
 	}
 
 	qint8 FractalLine::DrawableType(){
@@ -100,11 +103,6 @@ namespace Lipuma
 		endPt->setPos(end);
 	}
 
-	float FractalLine::getFrequency()
-	{
-		return frequency;
-	}
-
 	QVariant FractalLine::itemChange(GraphicsItemChange change, const QVariant &val)
 	{
 		QGraphicsItem::itemChange(change, val);
@@ -116,19 +114,12 @@ namespace Lipuma
 		return val;
 	}
 
-	void FractalLine::setFrequency(float f)
-	{
-		frequency = f;
-		prepareGeometryChange();
-		update();
-	}
-
 	QPainterPath FractalLine::generatePath() const {
 		QPainterPath path;
 		// Figure out the number of points to render the line with
 		const int POINTS = end.x() / PERIOD;
 		std::vector<float> curve = std::vector<float>(((POINTS + 8) / 8) * 8); // Round to nearest multiple of 8, fastnoise runs better with it
-		noise->GenUniformGrid2D(curve.data(), 0, 0, ((POINTS + 8) / 8) * 8, 1, frequency, seed);
+		noise->GenUniformGrid2D(curve.data(), 0, 0, ((POINTS + 8) / 8) * 8, 1, data(DrawableProperty::Frequency).toFloat(), seed);
 
 		// First and last point need to always be at zero, so skip the 0th element and the final element
 		for (int i = 1; i < POINTS; i++)
