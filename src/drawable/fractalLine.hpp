@@ -46,6 +46,11 @@ namespace Lipuma
 		// Set the endpoint of the line in canvas space
 		void setEnd(QPointF);
 
+		void setFrequency(qreal) override;
+		qreal getFrequency() const override;
+
+		void setGain(qreal) override;
+
 	private:
 		QPainterPath generatePath() const;
 		FastNoise::SmartNode<FastNoise::Fractal<>> noise;
@@ -54,6 +59,8 @@ namespace Lipuma
 		static const int HEIGHT = 10;
 
 		EditPoint *startPt, *endPt;
+
+		qreal frequency;
 
 		QPointF start, end;
 		int seed;

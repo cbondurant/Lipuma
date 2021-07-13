@@ -45,13 +45,16 @@ namespace Lipuma
 
 		// Set the starting point of the line in canvas space
 		void setStart(QPointF);
-
 		void setInnerStart(QPointF);
 
 		// Set the endpoint of the line in canvas space
 		void setEnd(QPointF);
-
 		void setInnerEnd(QPointF);
+
+		void setFrequency(qreal) override;
+		qreal getFrequency() const override;
+
+		void setGain(qreal) override;
 
 		friend std::ostream& operator<<(std::ostream& os, const FractalCurve& dt);
 
@@ -65,6 +68,8 @@ namespace Lipuma
 		EditPoint *startPt, *innerStartPt, *endPt, *innerEndPt;
 
 		QPointF start, end;
+
+		qreal frequency;
 
 		BezierCurve curve;
 		qint32 seed;

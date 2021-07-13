@@ -18,9 +18,7 @@ namespace Lipuma {
 		static qint8 drawableType();
 		virtual void setFrequency(qreal);
 		virtual qreal getFrequency() const;
-
-	private:
-		qreal frequency;
+		virtual void setGain(qreal);
 	};
 }
 

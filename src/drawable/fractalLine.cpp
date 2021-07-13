@@ -12,7 +12,6 @@
 #include <QWidget>
 
 #include "drawable/editPoint.hpp"
-#include "drawable/drawableProperties.hpp"
 #include "math/points.hpp"
 
 namespace Lipuma
@@ -23,7 +22,7 @@ namespace Lipuma
 	void FractalLine::initalizeNoise(){
 		noise = FastNoise::New<FastNoise::FractalFBm>();
 		noise->SetSource(FastNoise::New<FastNoise::Simplex>());
-		setData(DrawableProperty::Frequency, 0.02);
+		setFrequency(0.2);
 		noise->SetOctaveCount(5);
 		noise->SetLacunarity(2.0f);
 		noise->SetGain(.9);
@@ -103,6 +102,20 @@ namespace Lipuma
 		endPt->setPos(end);
 	}
 
+	void FractalLine::setFrequency(qreal f) {
+		frequency = f;
+		prepareGeometryChange();
+	}
+
+	qreal FractalLine::getFrequency() const {
+		return frequency;
+	}
+
+	void FractalLine::setGain(qreal f) {
+		noise->SetGain(f);
+		prepareGeometryChange();
+	}
+
 	QVariant FractalLine::itemChange(GraphicsItemChange change, const QVariant &val)
 	{
 		QGraphicsItem::itemChange(change, val);
@@ -119,7 +132,7 @@ namespace Lipuma
 		// Figure out the number of points to render the line with
 		const int POINTS = end.x() / PERIOD;
 		std::vector<float> curve = std::vector<float>(((POINTS + 8) / 8) * 8); // Round to nearest multiple of 8, fastnoise runs better with it
-		noise->GenUniformGrid2D(curve.data(), 0, 0, ((POINTS + 8) / 8) * 8, 1, data(DrawableProperty::Frequency).toFloat(), seed);
+		noise->GenUniformGrid2D(curve.data(), 0, 0, ((POINTS + 8) / 8) * 8, 1, getFrequency(), seed);
 
 		// First and last point need to always be at zero, so skip the 0th element and the final element
 		for (int i = 1; i < POINTS; i++)

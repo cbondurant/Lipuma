@@ -172,6 +172,20 @@ namespace Lipuma {
 		prepareGeometryChange();
 	}
 
+	void FractalCurve::setFrequency(qreal f) {
+		frequency = f;
+		prepareGeometryChange();
+	}
+
+	qreal FractalCurve::getFrequency() const {
+		return frequency;
+	}
+
+	void FractalCurve::setGain(qreal f) {
+		noise->SetGain(f);
+		prepareGeometryChange();
+	}
+
 	QVariant FractalCurve::itemChange(GraphicsItemChange change, const QVariant &val)
 	{
 		QGraphicsItem::itemChange(change, val);

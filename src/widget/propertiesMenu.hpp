@@ -17,6 +17,7 @@ namespace Lipuma{
 
 	public slots:
 		void frequencyChanged(int);
+		void gainChanged(int);
 
 	private:
 		QFormLayout *layout;
