@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 druid = {version = "0.7.0", features = ["im", "svg", "image"]}
+noise = "0.8.1"
+rand = "0.8.5"
