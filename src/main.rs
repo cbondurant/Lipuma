@@ -1,3 +1,4 @@
+use druid::im::vector;
 use druid::im::vector::Vector;
 use druid::Color;
 use druid::Point;
@@ -11,6 +12,7 @@ struct Line(Point, Point);
 #[derive(Data, Clone)]
 struct GraphicsData {
     pub lines: Vector<Line>,
+    pub preview: Option<Line>,
 }
 
 enum GraphicsEngineState {
@@ -55,11 +57,17 @@ impl Widget<GraphicsData> for GraphicsWidget {
                 GraphicsEngineState::Default => return,
                 GraphicsEngineState::Drawing { draw_start } => {
                     data.lines.push_front(Line(draw_start, event.pos));
+                    data.preview = None;
                     self.enter_state(GraphicsEngineState::Default);
                     ctx.request_paint();
                 }
             },
-            druid::Event::MouseMove(_) => return,
+            druid::Event::MouseMove(event) => {
+                if let GraphicsEngineState::Drawing { draw_start } = self.state {
+                    data.preview = Some(Line(draw_start, event.pos));
+                    ctx.request_paint();
+                }
+            }
             _ => return,
         }
     }
@@ -99,6 +107,13 @@ impl Widget<GraphicsData> for GraphicsWidget {
             let t = druid::piet::kurbo::Line::new((start.x, start.y), (end.x, end.y));
             ctx.stroke(t, &Color::BLACK, 1.0);
         }
+        if let Some(Line(start, end)) = data.preview {
+            ctx.stroke(
+                druid::piet::kurbo::Line::new(start, end),
+                &Color::BLACK,
+                1.0,
+            )
+        }
     }
 }
 
@@ -109,11 +124,9 @@ fn build_ui() -> impl Widget<GraphicsData> {
 }
 
 fn main() -> Result<(), PlatformError> {
-    let mut lines = Vector::new();
-    lines.push_front(Line(Point::new(100.0, 100.0), Point::new(100.0, 200.0)));
-    lines.push_front(Line(Point::new(100.0, 200.0), Point::new(200.0, 200.0)));
-    lines.push_front(Line(Point::new(200.0, 200.0), Point::new(200.0, 100.0)));
-    lines.push_front(Line(Point::new(200.0, 100.0), Point::new(100.0, 100.0)));
-    AppLauncher::with_window(WindowDesc::new(build_ui)).launch(GraphicsData { lines })?;
+    AppLauncher::with_window(WindowDesc::new(build_ui)).launch(GraphicsData {
+        lines: vector![],
+        preview: None,
+    })?;
     Ok(())
 }
