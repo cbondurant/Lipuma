@@ -31,7 +31,7 @@ impl GraphicsWidget {
     fn exit_state(&self) {
         match self.state {
             GraphicsEngineState::Default => (),
-            GraphicsEngineState::Drawing { draw_start } => (),
+            GraphicsEngineState::Drawing { draw_start: _ } => (),
         }
     }
 }
@@ -42,7 +42,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
         ctx: &mut druid::EventCtx,
         event: &druid::Event,
         data: &mut GraphicsData,
-        env: &druid::Env,
+        _env: &druid::Env,
     ) {
         match event {
             druid::Event::MouseDown(event) => match self.state {
