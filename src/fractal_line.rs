@@ -19,7 +19,7 @@ pub struct FractalLine {
 
 impl FractalLinePathIter {
 	fn smooth_to_zero(x: f64) -> f64 {
-		1.0 - (2.0 * (x - 0.5).powi(6))
+		1.0 - ((2.0 * x) - 1.0).powi(16)
 	}
 }
 
@@ -60,7 +60,7 @@ impl Iterator for FractalLinePathIter {
 		let simplex = self.line_data.noise.get([simplex_distance, 0.0]) * 3.0;
 		Some(druid::piet::kurbo::PathEl::LineTo(
 			self.line_data.start.lerp(self.line_data.end, index)
-				+ self.line_data.width * self.perpendicular * simplex * Self::smooth_to_zero(index),
+				+ self.perpendicular * self.line_data.width * Self::smooth_to_zero(index) * simplex,
 		))
 	}
 }
