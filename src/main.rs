@@ -4,9 +4,9 @@ use druid::{theme, AppLauncher, Color, PlatformError, Widget, WindowDesc};
 mod bound;
 mod drawable;
 mod fractal_line;
-mod noise_widget;
+mod graphics_scene_widget;
 mod renderobject;
-use noise_widget::*;
+use graphics_scene_widget::*;
 
 fn build_ui() -> impl Widget<GraphicsData> {
 	GraphicsWidget::new()

@@ -59,7 +59,7 @@ impl GraphicsWidget {
 impl Widget<GraphicsData> for GraphicsWidget {
 	fn event(
 		&mut self,
-		_ctx: &mut druid::EventCtx,
+		ctx: &mut druid::EventCtx,
 		event: &druid::Event,
 		data: &mut GraphicsData,
 		_env: &druid::Env,
@@ -102,6 +102,10 @@ impl Widget<GraphicsData> for GraphicsWidget {
 						preview.end = event.pos;
 					}
 				}
+			}
+			druid::Event::WindowSize(_) => {
+				// Need to request full repaint to ensure everything draws correctly
+				ctx.request_paint();
 			}
 			_ => (),
 		}
