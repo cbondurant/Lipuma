@@ -7,7 +7,7 @@ use std::rc::Rc;
 
 #[derive(Data, Clone)]
 pub struct RenderObject {
-	pub z: i32,
+	pub z: u32,
 	pub transform: Affine,
 	pub drawable: Rc<Box<dyn Drawable>>,
 }
@@ -41,7 +41,12 @@ impl RenderObject {
 		});
 	}
 
-	pub fn paint_bounds(&self, ctx: &mut druid::PaintCtx, env: &druid::Env) {
+	pub fn get_drawable(&self) -> Rc<Box<dyn Drawable>> {
+		Rc::clone(&self.drawable)
+	}
+
+	#[allow(dead_code)] // Exists for possible debug use
+	pub fn paint_bounds(&self, ctx: &mut druid::PaintCtx, _env: &druid::Env) {
 		ctx.transform(self.transform);
 		ctx.with_save(|new_ctx| new_ctx.stroke(self.drawable.AABB(), &Color::RED, 1.0))
 	}

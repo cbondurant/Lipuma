@@ -6,7 +6,6 @@ mod drawable;
 mod fractal_line;
 mod noise_widget;
 mod renderobject;
-mod renderscene;
 use noise_widget::*;
 
 fn build_ui() -> impl Widget<GraphicsData> {

@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use druid::im::OrdSet;
+use druid::im::Vector;
 use druid::Affine;
 use druid::Color;
 use druid::Point;
@@ -30,7 +31,7 @@ pub enum GraphicsEngineState {
 pub struct GraphicsWidget {
 	pub state: GraphicsEngineState,
 	change_list: OrdSet<RenderObject>,
-	background_dirty: bool,
+	remove_list: Vector<RenderObject>,
 }
 
 impl GraphicsWidget {
@@ -38,7 +39,7 @@ impl GraphicsWidget {
 		Self {
 			state: GraphicsEngineState::Default,
 			change_list: OrdSet::new(),
-			background_dirty: true,
+			remove_list: Vector::new(),
 		}
 	}
 
@@ -58,7 +59,7 @@ impl GraphicsWidget {
 impl Widget<GraphicsData> for GraphicsWidget {
 	fn event(
 		&mut self,
-		ctx: &mut druid::EventCtx,
+		_ctx: &mut druid::EventCtx,
 		event: &druid::Event,
 		data: &mut GraphicsData,
 		_env: &druid::Env,
@@ -93,7 +94,6 @@ impl Widget<GraphicsData> for GraphicsWidget {
 
 					data.preview = None;
 					self.enter_state(GraphicsEngineState::Default);
-					ctx.request_paint();
 				}
 			},
 			druid::Event::MouseMove(event) => {
@@ -101,7 +101,6 @@ impl Widget<GraphicsData> for GraphicsWidget {
 					if let Some(preview) = &mut data.preview {
 						preview.end = event.pos;
 					}
-					ctx.request_paint();
 				}
 			}
 			_ => (),
@@ -119,7 +118,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
 
 	fn update(
 		&mut self,
-		_ctx: &mut druid::UpdateCtx,
+		ctx: &mut druid::UpdateCtx,
 		old_data: &GraphicsData,
 		data: &GraphicsData,
 		_env: &druid::Env,
@@ -137,6 +136,41 @@ impl Widget<GraphicsData> for GraphicsWidget {
 				druid::im::ordset::DiffItem::Remove(_) => None,
 			})
 			.collect();
+
+		for diff in old_data.objects.diff(&data.objects) {
+			match diff {
+				druid::im::ordset::DiffItem::Add(item) => {
+					self.change_list.insert(item.clone());
+					ctx.request_paint_rect(item.get_drawable().AABB());
+				}
+				druid::im::ordset::DiffItem::Update { old, new } => {
+					self.change_list.insert(new.clone());
+					self.remove_list.push_front(old.clone());
+					ctx.request_paint_rect(new.get_drawable().AABB());
+					ctx.request_paint_rect(old.get_drawable().AABB());
+				}
+				druid::im::ordset::DiffItem::Remove(item) => {
+					self.remove_list.push_front(item.clone());
+					ctx.request_paint_rect(item.get_drawable().AABB());
+				}
+			}
+		}
+
+		if let (Some(old), Some(new)) = (&old_data.preview, &data.preview) {
+			if !old.same(new) {
+				self.change_list.insert(RenderObject {
+					transform: Affine::scale(1.0),
+					drawable: Rc::new(Box::new(new.clone())),
+					z: match data.objects.get_max() {
+						Some(v) => v.z + 1,
+						None => 0,
+					},
+				});
+			}
+
+			ctx.request_paint_rect(old.AABB());
+			ctx.request_paint_rect(new.AABB());
+		}
 	}
 
 	fn layout(
@@ -151,25 +185,21 @@ impl Widget<GraphicsData> for GraphicsWidget {
 
 	fn paint(&mut self, ctx: &mut druid::PaintCtx, data: &GraphicsData, env: &druid::Env) {
 		let mut redraw_needed = OrdSet::new();
-		for object in &self.change_list {
-			for colltest in data.objects.iter() {
-				if object.intersects(colltest) {
-					redraw_needed.insert(colltest);
-				}
+		for object in &data.objects {
+			if !object
+				.get_drawable()
+				.AABB()
+				.intersect(ctx.region().bounding_box())
+				.is_empty()
+			{
+				redraw_needed.insert(object);
 			}
 		}
 
-		if self.background_dirty {
-			ctx.clear(Color::WHITE);
-			self.background_dirty = false;
-		}
+		ctx.clear(Color::WHITE);
 
 		//println!("{}, {}", self.change_list.len(), redraw_needed.len());
 		ctx.save().unwrap();
-		// This assumed redraw_needed only ever has one element, which I believe to be the case
-		if let Some(ro) = redraw_needed.get_max() {
-			ctx.clip(ro.drawable.AABB())
-		}
 		for robj in &self.change_list {
 			ctx.fill(robj.drawable.AABB(), &Color::WHITE);
 		}

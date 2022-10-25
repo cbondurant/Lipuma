@@ -85,7 +85,7 @@ impl Shape for FractalLine {
 	}
 
 	fn bounding_box(&self) -> Rect {
-		Rect::from_points(self.start, self.end).inflate(self.width, self.width)
+		Rect::from_points(self.start, self.end).inflate(self.width, self.width * 1.5)
 	}
 }
 
