@@ -50,6 +50,8 @@ impl Widget<GraphicsData> for GraphicsWidget {
 			.unwrap()
 			.event(event, ctx, data);
 		if !ctx.is_handled() {
+			#[allow(clippy::single_match)]
+			// We expect to match other expressions later, but this is the only one that matters now
 			match event {
 				druid::Event::WindowSize(_) => {
 					// Need to request full repaint to ensure everything draws correctly

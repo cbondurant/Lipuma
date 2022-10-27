@@ -58,18 +58,4 @@ impl RenderObject {
 		ctx.transform(self.transform);
 		ctx.with_save(|new_ctx| new_ctx.stroke(self.drawable.AABB(), &Color::RED, 1.0))
 	}
-
-	pub fn event(&mut self, ctx: &mut druid::EventCtx, event: &druid::Event, env: &druid::Env) {
-		Rc::get_mut(&mut self.drawable)
-			.unwrap()
-			.event(ctx, event, env, &mut self.transform)
-	}
-
-	pub fn intersects(&self, rhs: &Self) -> bool {
-		!self
-			.drawable
-			.AABB()
-			.intersect(rhs.drawable.AABB())
-			.is_empty()
-	}
 }
