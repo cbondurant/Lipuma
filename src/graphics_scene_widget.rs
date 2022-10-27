@@ -2,7 +2,6 @@ use std::rc::Rc;
 
 use druid::im::OrdSet;
 use druid::im::Vector;
-use druid::Affine;
 use druid::Color;
 use druid::Point;
 use druid::RenderContext;
@@ -12,7 +11,6 @@ use noise::OpenSimplex;
 
 use crate::draw_tools::fractal_line_tool::FractalLineTool;
 use crate::draw_tools::tool::Tool;
-use crate::drawable::Drawable;
 use crate::renderobject::RenderObject;
 
 #[derive(Data, Clone, Debug)]
@@ -24,13 +22,7 @@ pub struct GraphicsData {
 	pub preview: Option<RenderObject>,
 }
 
-pub enum GraphicsEngineState {
-	Default,
-	Drawing,
-}
-
 pub struct GraphicsWidget {
-	pub state: GraphicsEngineState,
 	change_list: OrdSet<RenderObject>,
 	remove_list: Vector<RenderObject>,
 	current_tool: Rc<Box<dyn Tool>>,
@@ -39,22 +31,9 @@ pub struct GraphicsWidget {
 impl GraphicsWidget {
 	pub fn new() -> Self {
 		Self {
-			state: GraphicsEngineState::Default,
 			change_list: OrdSet::new(),
 			remove_list: Vector::new(),
 			current_tool: Rc::new(Box::new(FractalLineTool::new())),
-		}
-	}
-
-	fn enter_state(&mut self, new_state: GraphicsEngineState) {
-		self.exit_state();
-		self.state = new_state;
-	}
-
-	fn exit_state(&self) {
-		match self.state {
-			GraphicsEngineState::Default => (),
-			GraphicsEngineState::Drawing => (),
 		}
 	}
 }
