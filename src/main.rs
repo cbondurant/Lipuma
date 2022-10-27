@@ -2,6 +2,7 @@ use druid::im::ordset;
 use druid::{theme, AppLauncher, Color, PlatformError, Widget, WindowDesc};
 
 mod bound;
+mod draw_tools;
 mod drawable;
 mod fractal_line;
 mod graphics_scene_widget;

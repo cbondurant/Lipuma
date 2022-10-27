@@ -10,8 +10,9 @@ use druid::{Data, Widget};
 
 use noise::OpenSimplex;
 
+use crate::draw_tools::fractal_line_tool::FractalLineTool;
+use crate::draw_tools::tool::Tool;
 use crate::drawable::Drawable;
-use crate::fractal_line::FractalLine;
 use crate::renderobject::RenderObject;
 
 #[derive(Data, Clone, Debug)]
@@ -20,7 +21,7 @@ pub struct Line(Point, Point, Rc<OpenSimplex>);
 #[derive(Data, Clone)]
 pub struct GraphicsData {
 	pub objects: OrdSet<RenderObject>,
-	pub preview: Option<FractalLine>,
+	pub preview: Option<RenderObject>,
 }
 
 pub enum GraphicsEngineState {
@@ -32,6 +33,7 @@ pub struct GraphicsWidget {
 	pub state: GraphicsEngineState,
 	change_list: OrdSet<RenderObject>,
 	remove_list: Vector<RenderObject>,
+	current_tool: Rc<Box<dyn Tool>>,
 }
 
 impl GraphicsWidget {
@@ -40,6 +42,7 @@ impl GraphicsWidget {
 			state: GraphicsEngineState::Default,
 			change_list: OrdSet::new(),
 			remove_list: Vector::new(),
+			current_tool: Rc::new(Box::new(FractalLineTool::new())),
 		}
 	}
 
@@ -64,51 +67,19 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		data: &mut GraphicsData,
 		_env: &druid::Env,
 	) {
-		match event {
-			druid::Event::WindowConnected => {}
-			druid::Event::MouseDown(event) => match self.state {
-				GraphicsEngineState::Default => {
-					self.enter_state(GraphicsEngineState::Drawing);
-					data.preview = Some(FractalLine {
-						start: event.pos,
-						end: event.pos,
-						noise: Rc::new(OpenSimplex::new(rand::random())),
-						width: 10.0,
-						density: 0.05,
-						samples: 1000,
-					});
+		Rc::get_mut(&mut self.current_tool)
+			.unwrap()
+			.event(event, ctx, data);
+		if !ctx.is_handled() {
+			match event {
+				druid::Event::WindowSize(_) => {
+					// Need to request full repaint to ensure everything draws correctly
+					ctx.request_paint();
 				}
-				GraphicsEngineState::Drawing => (),
-			},
-			druid::Event::MouseUp(_) => match self.state {
-				GraphicsEngineState::Default => (),
-				GraphicsEngineState::Drawing => {
-					data.objects.insert(RenderObject {
-						transform: Affine::scale(1.0),
-						drawable: Rc::new(Box::new(data.preview.take().unwrap())),
-						z: match data.objects.get_max() {
-							Some(v) => v.z + 1,
-							None => 0,
-						},
-					});
-
-					data.preview = None;
-					self.enter_state(GraphicsEngineState::Default);
-				}
-			},
-			druid::Event::MouseMove(event) => {
-				if let GraphicsEngineState::Drawing = self.state {
-					if let Some(preview) = &mut data.preview {
-						preview.end = event.pos;
-					}
-				}
+				_ => (),
 			}
-			druid::Event::WindowSize(_) => {
-				// Need to request full repaint to ensure everything draws correctly
-				ctx.request_paint();
-			}
-			_ => (),
 		}
+		data.preview = self.current_tool.get_preview();
 	}
 
 	fn lifecycle(
@@ -162,18 +133,11 @@ impl Widget<GraphicsData> for GraphicsWidget {
 
 		if let (Some(old), Some(new)) = (&old_data.preview, &data.preview) {
 			if !old.same(new) {
-				self.change_list.insert(RenderObject {
-					transform: Affine::scale(1.0),
-					drawable: Rc::new(Box::new(new.clone())),
-					z: match data.objects.get_max() {
-						Some(v) => v.z + 1,
-						None => 0,
-					},
-				});
+				self.change_list.insert(new.clone());
 			}
 
-			ctx.request_paint_rect(old.AABB());
-			ctx.request_paint_rect(new.AABB());
+			ctx.request_paint_rect(old.get_drawable().AABB());
+			ctx.request_paint_rect(new.get_drawable().AABB());
 		}
 	}
 
@@ -215,7 +179,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
 			robj.paint(ctx, env);
 		}
 		if let Some(line) = &data.preview {
-			line.paint(ctx, env, &Affine::rotate(0.0));
+			line.paint(ctx, env);
 		}
 		ctx.restore().unwrap();
 		self.change_list.clear();

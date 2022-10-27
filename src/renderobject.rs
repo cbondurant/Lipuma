@@ -41,6 +41,14 @@ impl RenderObject {
 		});
 	}
 
+	pub fn new(z: u32, drawable: Rc<Box<dyn Drawable>>) -> Self {
+		Self {
+			z,
+			transform: Affine::new([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+			drawable,
+		}
+	}
+
 	pub fn get_drawable(&self) -> Rc<Box<dyn Drawable>> {
 		Rc::clone(&self.drawable)
 	}
