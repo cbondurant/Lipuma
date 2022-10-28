@@ -2,11 +2,9 @@ use druid::im::ordset;
 use druid::{theme, AppLauncher, Color, PlatformError, Widget, WindowDesc};
 
 mod draw_tools;
-mod drawable;
-mod fractal_line;
-mod graphics_scene_widget;
-mod renderobject;
-use graphics_scene_widget::*;
+mod render_objects;
+mod widgets;
+use widgets::graphics_scene_widget::*;
 
 fn build_ui() -> impl Widget<GraphicsData> {
 	GraphicsWidget::new()

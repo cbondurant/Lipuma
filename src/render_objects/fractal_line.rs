@@ -5,7 +5,7 @@ use druid::{
 use noise::{NoiseFn, OpenSimplex};
 use std::rc::Rc;
 
-use crate::drawable::Drawable;
+use super::drawable::Drawable;
 
 #[derive(Data, Clone)]
 pub struct FractalLine {

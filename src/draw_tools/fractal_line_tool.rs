@@ -4,7 +4,8 @@ use rand::random;
 use std::rc::Rc;
 
 use super::tool::Tool;
-use crate::{fractal_line::FractalLine, renderobject::RenderObject};
+use crate::render_objects::{fractal_line::FractalLine, RenderObject};
+use crate::widgets::graphics_scene_widget::GraphicsData;
 
 #[derive(Data, Clone, PartialEq, Eq)]
 enum ToolState {
@@ -36,7 +37,7 @@ impl FractalLineTool {
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		_data: &mut crate::graphics_scene_widget::GraphicsData,
+		_data: &mut GraphicsData,
 	) {
 		match self.state {
 			ToolState::Drawing => {
@@ -51,7 +52,7 @@ impl FractalLineTool {
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		_data: &mut crate::graphics_scene_widget::GraphicsData,
+		_data: &mut GraphicsData,
 	) {
 		self.state = ToolState::Drawing;
 		self.preview = FractalLine {
@@ -69,7 +70,7 @@ impl FractalLineTool {
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		data: &mut crate::graphics_scene_widget::GraphicsData,
+		data: &mut GraphicsData,
 	) {
 		match self.state {
 			ToolState::Drawing => {
@@ -89,11 +90,11 @@ impl FractalLineTool {
 }
 
 impl Tool for FractalLineTool {
-	fn enable(&mut self, _data: &mut crate::graphics_scene_widget::GraphicsData) {
+	fn enable(&mut self, _data: &mut GraphicsData) {
 		self.state = ToolState::Standby;
 	}
 
-	fn disable(&mut self, data: &mut crate::graphics_scene_widget::GraphicsData) {
+	fn disable(&mut self, data: &mut GraphicsData) {
 		match self.state {
 			ToolState::Drawing => {
 				// get_preview always returns some when drawing
@@ -103,12 +104,7 @@ impl Tool for FractalLineTool {
 		}
 	}
 
-	fn event(
-		&mut self,
-		event: &druid::Event,
-		ctx: &mut druid::EventCtx,
-		data: &mut crate::graphics_scene_widget::GraphicsData,
-	) {
+	fn event(&mut self, event: &druid::Event, ctx: &mut druid::EventCtx, data: &mut GraphicsData) {
 		match event {
 			druid::Event::MouseDown(event) => self.on_mouse_down(event, ctx, data),
 			druid::Event::MouseUp(event) => self.on_mouse_up(event, ctx, data),
@@ -117,7 +113,7 @@ impl Tool for FractalLineTool {
 		}
 	}
 
-	fn get_preview(&self) -> Option<crate::renderobject::RenderObject> {
+	fn get_preview(&self) -> Option<RenderObject> {
 		match self.state {
 			ToolState::Drawing => Some(RenderObject::new(
 				u32::MAX,

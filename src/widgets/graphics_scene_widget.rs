@@ -11,7 +11,7 @@ use noise::OpenSimplex;
 
 use crate::draw_tools::fractal_line_tool::FractalLineTool;
 use crate::draw_tools::tool::Tool;
-use crate::renderobject::RenderObject;
+use crate::render_objects::RenderObject;
 
 #[derive(Data, Clone, Debug)]
 pub struct Line(Point, Point, Rc<OpenSimplex>);

@@ -1,4 +1,4 @@
-use crate::{renderobject::RenderObject, GraphicsData};
+use crate::{render_objects::RenderObject, GraphicsData};
 use druid::{Event, EventCtx};
 
 pub trait Tool {
