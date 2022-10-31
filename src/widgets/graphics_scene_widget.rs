@@ -9,23 +9,15 @@ use druid::{Data, Widget};
 
 use noise::OpenSimplex;
 
-use crate::draw_tools::fractal_line_tool::FractalLineTool;
-use crate::draw_tools::tool::Tool;
+use super::graphics_data::GraphicsData;
 use crate::render_objects::RenderObject;
 
 #[derive(Data, Clone, Debug)]
 pub struct Line(Point, Point, Rc<OpenSimplex>);
 
-#[derive(Data, Clone)]
-pub struct GraphicsData {
-	pub objects: OrdSet<RenderObject>,
-	pub preview: Option<RenderObject>,
-}
-
 pub struct GraphicsWidget {
 	change_list: OrdSet<RenderObject>,
 	remove_list: Vector<RenderObject>,
-	current_tool: Rc<Box<dyn Tool>>,
 }
 
 impl GraphicsWidget {
@@ -33,7 +25,6 @@ impl GraphicsWidget {
 		Self {
 			change_list: OrdSet::new(),
 			remove_list: Vector::new(),
-			current_tool: Rc::new(Box::new(FractalLineTool::new())),
 		}
 	}
 }
@@ -46,9 +37,8 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		data: &mut GraphicsData,
 		_env: &druid::Env,
 	) {
-		Rc::get_mut(&mut self.current_tool)
-			.unwrap()
-			.event(event, ctx, data);
+		let muttool = Rc::make_mut(&mut data.tool);
+		data.objects = muttool.event(event, ctx, data.objects.clone());
 		if !ctx.is_handled() {
 			#[allow(clippy::single_match)]
 			// We expect to match other expressions later, but this is the only one that matters now
@@ -60,7 +50,8 @@ impl Widget<GraphicsData> for GraphicsWidget {
 				_ => (),
 			}
 		}
-		data.preview = self.current_tool.get_preview();
+		data.preview = muttool.get_preview();
+		data.tool = Rc::new(muttool.clone());
 	}
 
 	fn lifecycle(

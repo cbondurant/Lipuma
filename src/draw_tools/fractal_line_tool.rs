@@ -1,11 +1,11 @@
-use druid::{Data, Point};
+use druid::{im::OrdSet, Data, Point};
 use noise::OpenSimplex;
 use rand::random;
 use std::rc::Rc;
 
 use super::tool::Tool;
 use crate::render_objects::{fractal_line::FractalLine, RenderObject};
-use crate::widgets::graphics_scene_widget::GraphicsData;
+use crate::widgets::graphics_data::GraphicsData;
 
 #[derive(Data, Clone, PartialEq, Eq)]
 enum ToolState {
@@ -37,8 +37,8 @@ impl FractalLineTool {
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		_data: &mut GraphicsData,
-	) {
+		data: OrdSet<RenderObject>,
+	) -> OrdSet<RenderObject> {
 		match self.state {
 			ToolState::Drawing => {
 				ctx.set_handled();
@@ -46,14 +46,15 @@ impl FractalLineTool {
 			}
 			ToolState::Standby => (),
 		}
+		data
 	}
 
 	fn on_mouse_down(
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		_data: &mut GraphicsData,
-	) {
+		data: OrdSet<RenderObject>,
+	) -> OrdSet<RenderObject> {
 		self.state = ToolState::Drawing;
 		self.preview = FractalLine {
 			start: event.pos,
@@ -64,28 +65,31 @@ impl FractalLineTool {
 			samples: 1000,
 		};
 		ctx.set_handled();
+		data
 	}
 
 	fn on_mouse_up(
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		data: &mut GraphicsData,
-	) {
+
+		mut data: OrdSet<RenderObject>,
+	) -> OrdSet<RenderObject> {
 		match self.state {
 			ToolState::Drawing => {
 				self.preview.end = event.pos;
 				let mut obj = self.get_preview().unwrap();
-				obj.z = match data.objects.get_max() {
+				obj.z = match data.get_max() {
 					Some(obj) => obj.z + 1,
 					None => 0,
 				};
 				self.state = ToolState::Standby;
-				data.objects.insert(obj);
+				data.insert(obj);
 				ctx.is_handled();
 			}
 			ToolState::Standby => (),
 		}
+		data
 	}
 }
 
@@ -104,12 +108,17 @@ impl Tool for FractalLineTool {
 		}
 	}
 
-	fn event(&mut self, event: &druid::Event, ctx: &mut druid::EventCtx, data: &mut GraphicsData) {
+	fn event(
+		&mut self,
+		event: &druid::Event,
+		ctx: &mut druid::EventCtx,
+		data: OrdSet<RenderObject>,
+	) -> OrdSet<RenderObject> {
 		match event {
 			druid::Event::MouseDown(event) => self.on_mouse_down(event, ctx, data),
 			druid::Event::MouseUp(event) => self.on_mouse_up(event, ctx, data),
 			druid::Event::MouseMove(event) => self.on_mouse_move(event, ctx, data),
-			_ => (),
+			_ => data,
 		}
 	}
 
