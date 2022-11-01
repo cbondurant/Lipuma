@@ -3,6 +3,7 @@ use druid::Affine;
 use druid::Color;
 use druid::Data;
 use druid::RenderContext;
+use std::fmt::Debug;
 use std::rc::Rc;
 
 #[derive(Data, Clone)]
@@ -10,6 +11,16 @@ pub struct RenderObject {
 	pub z: u32,
 	pub transform: Affine,
 	pub drawable: Rc<Box<dyn Drawable>>,
+}
+
+impl Debug for RenderObject {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("RenderObject")
+			.field("z", &self.z)
+			.field("transform", &self.transform)
+			.field("drawable", &self.drawable.AABB())
+			.finish()
+	}
 }
 
 impl Ord for RenderObject {

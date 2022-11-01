@@ -1,7 +1,6 @@
 use std::rc::Rc;
 
 use druid::im::OrdSet;
-use druid::im::Vector;
 use druid::Color;
 use druid::Point;
 use druid::RenderContext;
@@ -17,14 +16,12 @@ pub struct Line(Point, Point, Rc<OpenSimplex>);
 
 pub struct GraphicsWidget {
 	change_list: OrdSet<RenderObject>,
-	remove_list: Vector<RenderObject>,
 }
 
 impl GraphicsWidget {
 	pub fn new() -> Self {
 		Self {
 			change_list: OrdSet::new(),
-			remove_list: Vector::new(),
 		}
 	}
 }
@@ -92,24 +89,32 @@ impl Widget<GraphicsData> for GraphicsWidget {
 				}
 				druid::im::ordset::DiffItem::Update { old, new } => {
 					self.change_list.insert(new.clone());
-					self.remove_list.push_front(old.clone());
 					ctx.request_paint_rect(new.get_drawable().AABB());
 					ctx.request_paint_rect(old.get_drawable().AABB());
 				}
 				druid::im::ordset::DiffItem::Remove(item) => {
-					self.remove_list.push_front(item.clone());
 					ctx.request_paint_rect(item.get_drawable().AABB());
 				}
 			}
 		}
 
-		if let (Some(old), Some(new)) = (&old_data.preview, &data.preview) {
-			if !old.same(new) {
-				self.change_list.insert(new.clone());
-			}
+		match (&old_data.preview, &data.preview) {
+			(Some(old), Some(new)) => {
+				if !old.same(new) {
+					self.change_list.insert(new.clone());
+				}
 
-			ctx.request_paint_rect(old.get_drawable().AABB());
-			ctx.request_paint_rect(new.get_drawable().AABB());
+				ctx.request_paint_rect(old.get_drawable().AABB());
+				ctx.request_paint_rect(new.get_drawable().AABB());
+			}
+			(Some(old), None) => {
+				ctx.request_paint_rect(old.get_drawable().AABB());
+			}
+			(None, Some(new)) => {
+				self.change_list.insert(new.clone());
+				ctx.request_paint_rect(new.get_drawable().AABB());
+			}
+			(None, None) => (),
 		}
 	}
 
@@ -125,14 +130,16 @@ impl Widget<GraphicsData> for GraphicsWidget {
 
 	fn paint(&mut self, ctx: &mut druid::PaintCtx, data: &GraphicsData, env: &druid::Env) {
 		let mut redraw_needed = OrdSet::new();
-		for object in &data.objects {
+		for object in data.objects.iter().cloned() {
 			if !object
 				.get_drawable()
 				.AABB()
 				.intersect(ctx.region().bounding_box())
 				.is_empty()
 			{
-				redraw_needed.insert(object);
+				if !self.change_list.contains(&object) {
+					redraw_needed.insert(object);
+				}
 			}
 		}
 
@@ -140,18 +147,9 @@ impl Widget<GraphicsData> for GraphicsWidget {
 
 		//println!("{}, {}", self.change_list.len(), redraw_needed.len());
 		ctx.save().unwrap();
-		for robj in &self.change_list {
-			ctx.fill(robj.drawable.AABB(), &Color::WHITE);
-		}
-		for robj in &redraw_needed {
-			ctx.fill(robj.drawable.AABB(), &Color::WHITE);
-		}
 		// TODO: Fix draw order errors
-		for robj in self.change_list.iter().chain(redraw_needed) {
+		for robj in self.change_list.iter().chain(redraw_needed.iter()) {
 			robj.paint(ctx, env);
-		}
-		if let Some(line) = &data.preview {
-			line.paint(ctx, env);
 		}
 		ctx.restore().unwrap();
 		self.change_list.clear();
