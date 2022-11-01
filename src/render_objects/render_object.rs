@@ -25,18 +25,29 @@ impl Debug for RenderObject {
 
 impl Ord for RenderObject {
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		self.z.cmp(&other.z)
+		match self.z.cmp(&other.z) {
+			std::cmp::Ordering::Equal => {
+				Rc::as_ptr(&self.drawable).cmp(&Rc::as_ptr(&other.drawable))
+			}
+			ord => ord,
+		}
 	}
 }
 impl PartialOrd for RenderObject {
 	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		self.z.partial_cmp(&other.z)
+		match self.z.partial_cmp(&other.z) {
+			Some(std::cmp::Ordering::Equal) => {
+				Rc::as_ptr(&self.drawable).partial_cmp(&Rc::as_ptr(&other.drawable))
+			}
+			Some(ord) => Some(ord),
+			None => None,
+		}
 	}
 }
 
 impl PartialEq for RenderObject {
 	fn eq(&self, other: &Self) -> bool {
-		self.z == other.z
+		self.z == other.z && Rc::ptr_eq(&self.drawable, &other.drawable)
 	}
 }
 

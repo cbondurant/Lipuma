@@ -137,18 +137,14 @@ impl Widget<GraphicsData> for GraphicsWidget {
 				.intersect(ctx.region().bounding_box())
 				.is_empty()
 			{
-				if !self.change_list.contains(&object) {
-					redraw_needed.insert(object);
-				}
+				redraw_needed.insert(object);
 			}
 		}
 
 		ctx.clear(Color::WHITE);
 
-		//println!("{}, {}", self.change_list.len(), redraw_needed.len());
 		ctx.save().unwrap();
-		// TODO: Fix draw order errors
-		for robj in self.change_list.iter().chain(redraw_needed.iter()) {
+		for robj in self.change_list.to_owned().union(redraw_needed) {
 			robj.paint(ctx, env);
 		}
 		ctx.restore().unwrap();
