@@ -1,5 +1,5 @@
 use druid::{
-	kurbo::{PathEl, Shape},
+	kurbo::{BezPath, PathEl, Shape},
 	Color, Data, Point, Rect, RenderContext, Vec2,
 };
 use noise::{NoiseFn, OpenSimplex};
@@ -15,6 +15,8 @@ pub struct FractalLine {
 	pub width: f64,
 	pub density: f64,
 	pub samples: i32,
+	pub laurancity: f64,
+	pub octaves: i8,
 }
 
 impl FractalLinePathIter {
@@ -57,7 +59,11 @@ impl Iterator for FractalLinePathIter {
 		self.i += 1;
 
 		let simplex_distance = self.real_length * index * self.line_data.density;
-		let simplex = self.line_data.noise.get([simplex_distance, 0.0]) * 3.0;
+		let mut simplex = 0.0;
+		for i in 0..self.line_data.octaves {
+			simplex += self.line_data.noise.get([simplex_distance * i as f64, 0.0])
+				* 3.0 * self.line_data.laurancity.powi(i.into());
+		}
 		Some(druid::piet::kurbo::PathEl::LineTo(
 			self.line_data.start.lerp(self.line_data.end, index)
 				+ self.perpendicular * self.line_data.width * Self::smooth_to_zero(index) * simplex,
@@ -94,6 +100,10 @@ impl Drawable for FractalLine {
 		self.bounding_box()
 	}
 
+	fn fine_collision_shape(&self, tolerance: f64) -> BezPath {
+		self.to_path(tolerance)
+	}
+
 	#[allow(unused_variables)]
 	fn event(
 		&mut self,
@@ -105,7 +115,15 @@ impl Drawable for FractalLine {
 		todo!()
 	}
 
-	fn paint(&self, ctx: &mut druid::PaintCtx, _env: &druid::Env, _sctx: &RenderObject) {
-		ctx.stroke(self, &Color::BLACK, 1.0);
+	fn paint(&self, ctx: &mut druid::PaintCtx, _env: &druid::Env, sctx: &RenderObject) {
+		ctx.stroke(
+			self,
+			if sctx.is_selected() {
+				&Color::RED
+			} else {
+				&Color::BLACK
+			},
+			1.0,
+		);
 	}
 }

@@ -1,4 +1,5 @@
 use druid::{
+	kurbo::Shape,
 	piet::{PaintBrush, StrokeStyle},
 	Color, Rect, RenderContext,
 };
@@ -20,6 +21,10 @@ impl SelectionRect {
 impl Drawable for SelectionRect {
 	fn AABB(&self) -> Rect {
 		self.rect.inflate(1.0, 1.0)
+	}
+
+	fn fine_collision_shape(&self, tolerance: f64) -> druid::kurbo::BezPath {
+		self.AABB().to_path(tolerance)
 	}
 
 	fn event(

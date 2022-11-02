@@ -5,11 +5,17 @@ use druid::{im::OrdSet, Data, Event, Point, Rect};
 
 use crate::render_objects::{selection_rect::SelectionRect, RenderObject};
 
+#[derive(Data, Debug, Clone, PartialEq, Eq)]
+enum SelectionState {
+	Active,
+	Inactive,
+}
+
 #[derive(Data, Debug, Clone)]
 pub struct SelectionTool {
 	start_coord: Point,
 	end_coord: Point,
-	is_active: bool,
+	state: SelectionState,
 }
 
 impl SelectionTool {
@@ -17,8 +23,39 @@ impl SelectionTool {
 		Self {
 			start_coord: Point::ZERO,
 			end_coord: Point::ZERO,
-			is_active: false,
+			state: SelectionState::Inactive,
 		}
+	}
+
+	fn update_selected(&self, mut data: OrdSet<RenderObject>) -> OrdSet<RenderObject> {
+		let bound = Rect::from_points(self.start_coord, self.end_coord);
+		'outer: for item in &data.clone() {
+			if !bound.intersect(item.drawable.AABB()).is_empty() {
+				for segment in item.drawable.fine_collision_shape(1.0) {
+					match segment {
+						druid::kurbo::PathEl::MoveTo(p)
+						| druid::kurbo::PathEl::LineTo(p)
+						| druid::kurbo::PathEl::QuadTo(_, p)
+						| druid::kurbo::PathEl::CurveTo(_, _, p) => {
+							if bound.contains(p) {
+								let mut new_item = item.clone();
+								new_item.select();
+								data.remove(item);
+								data.insert(new_item);
+								continue 'outer;
+							}
+						}
+						druid::kurbo::PathEl::ClosePath => todo!(),
+					}
+				}
+			}
+
+			let mut new_item = item.clone();
+			new_item.deselect();
+			data.remove(item);
+			data.insert(new_item);
+		}
+		data
 	}
 }
 
@@ -39,27 +76,32 @@ impl Tool for SelectionTool {
 	) -> OrdSet<RenderObject> {
 		match event {
 			Event::MouseDown(e) => {
-				self.is_active = true;
+				self.state = SelectionState::Active;
 				self.start_coord = e.pos;
+				self.end_coord = e.pos;
 			}
-			Event::MouseUp(_) => self.is_active = false,
-			Event::MouseMove(e) => self.end_coord = e.pos,
+			Event::MouseUp(_) => self.state = SelectionState::Inactive,
+			Event::MouseMove(e) => {
+				if let SelectionState::Active = self.state {
+					self.end_coord = e.pos;
+					return self.update_selected(data);
+				}
+			}
 			_ => (),
 		}
 		data
 	}
 
 	fn get_preview(&self) -> Option<RenderObject> {
-		if self.is_active {
-			Some(RenderObject::new(
+		match self.state {
+			SelectionState::Active => Some(RenderObject::new(
 				u32::MAX,
 				Rc::new(Box::new(SelectionRect::new(Rect::from_points(
 					self.start_coord,
 					self.end_coord,
 				)))),
-			))
-		} else {
-			None
+			)),
+			SelectionState::Inactive => None,
 		}
 	}
 }

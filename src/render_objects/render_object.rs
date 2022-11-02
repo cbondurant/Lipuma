@@ -10,6 +10,7 @@ use std::rc::Rc;
 pub struct RenderObject {
 	pub z: u32,
 	pub transform: Affine,
+	pub selected: bool,
 	pub drawable: Rc<Box<dyn Drawable>>,
 }
 
@@ -47,7 +48,10 @@ impl PartialOrd for RenderObject {
 
 impl PartialEq for RenderObject {
 	fn eq(&self, other: &Self) -> bool {
-		self.z == other.z && Rc::ptr_eq(&self.drawable, &other.drawable)
+		self.z == other.z
+			&& Rc::ptr_eq(&self.drawable, &other.drawable)
+			&& self.selected == other.selected
+			&& self.transform == other.transform
 	}
 }
 
@@ -57,8 +61,6 @@ impl RenderObject {
 	pub fn paint(&self, ctx: &mut druid::PaintCtx, env: &druid::Env) {
 		ctx.with_save(|newctx| {
 			newctx.transform(self.transform);
-			//newctx.clip(self.drawable.AABB());
-			//newctx.fill(self.drawable.AABB(), &Color::WHITE);
 			self.drawable.paint(newctx, env, &self);
 		});
 	}
@@ -68,6 +70,7 @@ impl RenderObject {
 			z,
 			transform: Affine::new([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
 			drawable,
+			selected: false,
 		}
 	}
 
@@ -79,5 +82,17 @@ impl RenderObject {
 	pub fn paint_bounds(&self, ctx: &mut druid::PaintCtx, _env: &druid::Env) {
 		ctx.transform(self.transform);
 		ctx.with_save(|new_ctx| new_ctx.stroke(self.drawable.AABB(), &Color::RED, 1.0))
+	}
+
+	pub fn select(&mut self) {
+		self.selected = true;
+	}
+
+	pub fn deselect(&mut self) {
+		self.selected = false;
+	}
+
+	pub fn is_selected(&self) -> bool {
+		self.selected
 	}
 }

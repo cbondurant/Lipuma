@@ -1,10 +1,11 @@
-use druid::Rect;
+use druid::{kurbo::BezPath, Rect};
 
 use super::RenderObject;
 
 pub trait Drawable {
 	#[allow(non_snake_case)]
 	fn AABB(&self) -> Rect;
+	fn fine_collision_shape(&self, tolerance: f64) -> BezPath;
 
 	fn event(
 		&mut self,

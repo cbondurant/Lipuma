@@ -28,7 +28,9 @@ impl FractalLineTool {
 				noise: Rc::new(OpenSimplex::new(0)),
 				width: 10.0,
 				density: 0.05,
-				samples: 1000,
+				samples: 500,
+				laurancity: 0.5,
+				octaves: 4,
 			},
 			state: ToolState::Standby,
 		}
@@ -62,7 +64,9 @@ impl FractalLineTool {
 			noise: Rc::new(OpenSimplex::new(random())),
 			width: 10.0,
 			density: 0.05,
-			samples: 1000,
+			samples: 500,
+			laurancity: 0.5,
+			octaves: 4,
 		};
 		ctx.set_handled();
 		data
