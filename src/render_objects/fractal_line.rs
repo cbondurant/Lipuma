@@ -1,13 +1,13 @@
 use druid::{
 	kurbo::{PathEl, Shape},
-	Affine, Color, Data, Point, Rect, RenderContext, Vec2,
+	Color, Data, Point, Rect, RenderContext, Vec2,
 };
 use noise::{NoiseFn, OpenSimplex};
 use std::rc::Rc;
 
-use super::drawable::Drawable;
+use super::{drawable::Drawable, RenderObject};
 
-#[derive(Data, Clone)]
+#[derive(Data, Clone, Debug)]
 pub struct FractalLine {
 	pub start: Point,
 	pub end: Point,
@@ -85,7 +85,7 @@ impl Shape for FractalLine {
 	}
 
 	fn bounding_box(&self) -> Rect {
-		Rect::from_points(self.start, self.end).inflate(self.width, self.width * 1.5)
+		Rect::from_points(self.start, self.end).inflate(self.width * 1.5, self.width * 1.5)
 	}
 }
 
@@ -100,12 +100,12 @@ impl Drawable for FractalLine {
 		ctx: &mut druid::EventCtx,
 		event: &druid::Event,
 		env: &druid::Env,
-		sctx: &mut Affine,
+		sctx: &RenderObject,
 	) {
 		todo!()
 	}
 
-	fn paint(&self, ctx: &mut druid::PaintCtx, _env: &druid::Env, _sctx: &Affine) {
+	fn paint(&self, ctx: &mut druid::PaintCtx, _env: &druid::Env, _sctx: &RenderObject) {
 		ctx.stroke(self, &Color::BLACK, 1.0);
 	}
 }

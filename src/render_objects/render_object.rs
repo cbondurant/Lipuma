@@ -59,7 +59,7 @@ impl RenderObject {
 			newctx.transform(self.transform);
 			//newctx.clip(self.drawable.AABB());
 			//newctx.fill(self.drawable.AABB(), &Color::WHITE);
-			self.drawable.paint(newctx, env, &self.transform);
+			self.drawable.paint(newctx, env, &self);
 		});
 	}
 

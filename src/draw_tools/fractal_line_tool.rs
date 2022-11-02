@@ -3,17 +3,17 @@ use noise::OpenSimplex;
 use rand::random;
 use std::rc::Rc;
 
-use super::tool::Tool;
 use crate::render_objects::{fractal_line::FractalLine, RenderObject};
-use crate::widgets::graphics_data::GraphicsData;
 
-#[derive(Data, Clone, PartialEq, Eq)]
+use super::tool::Tool;
+
+#[derive(Data, Clone, PartialEq, Eq, Debug)]
 enum ToolState {
 	Drawing,
 	Standby,
 }
 
-#[derive(Data, Clone)]
+#[derive(Data, Debug, Clone)]
 pub struct FractalLineTool {
 	preview: FractalLine,
 	state: ToolState,
@@ -94,15 +94,15 @@ impl FractalLineTool {
 }
 
 impl Tool for FractalLineTool {
-	fn enable(&mut self, _data: &mut GraphicsData) {
+	fn enable(&mut self, _data: &mut OrdSet<RenderObject>) {
 		self.state = ToolState::Standby;
 	}
 
-	fn disable(&mut self, data: &mut GraphicsData) {
+	fn disable(&mut self, data: &mut OrdSet<RenderObject>) {
 		match self.state {
 			ToolState::Drawing => {
 				// get_preview always returns some when drawing
-				data.objects.insert(self.get_preview().unwrap());
+				data.insert(self.get_preview().unwrap());
 			}
 			ToolState::Standby => (),
 		}

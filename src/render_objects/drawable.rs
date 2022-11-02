@@ -1,4 +1,6 @@
-use druid::{Affine, Rect};
+use druid::Rect;
+
+use super::RenderObject;
 
 pub trait Drawable {
 	#[allow(non_snake_case)]
@@ -9,7 +11,7 @@ pub trait Drawable {
 		ctx: &mut druid::EventCtx,
 		event: &druid::Event,
 		env: &druid::Env,
-		sctx: &mut Affine,
+		sctx: &RenderObject,
 	);
-	fn paint(&self, ctx: &mut druid::PaintCtx, env: &druid::Env, sctx: &Affine);
+	fn paint(&self, ctx: &mut druid::PaintCtx, env: &druid::Env, sctx: &RenderObject);
 }

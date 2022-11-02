@@ -1,8 +1,11 @@
+use std::sync::{Arc, Mutex};
+
 use draw_tools::fractal_line_tool::FractalLineTool;
+use draw_tools::selection_tool::SelectionTool;
+use draw_tools::tool::Tool;
 use druid::im::ordset;
-use druid::widget::Flex;
-use druid::{theme, AppLauncher, Color, PlatformError, Widget, WidgetExt, WindowDesc};
-use std::rc::Rc;
+use druid::widget::{Button, Flex};
+use druid::{AppLauncher, PlatformError, Widget, WindowDesc};
 
 mod draw_tools;
 mod render_objects;
@@ -11,22 +14,32 @@ use widgets::{graphics_data::GraphicsData, graphics_scene_widget::*};
 
 fn build_ui() -> impl Widget<GraphicsData> {
 	let mut row = Flex::row();
+	row.add_child(
+		Flex::column()
+			.with_child(Button::new("Fractal Line Tool").on_click(
+				|_ctx, data: &mut GraphicsData, _env| {
+					data.tool.lock().unwrap().disable(&mut data.objects);
+					data.tool = Arc::new(Mutex::new(FractalLineTool::new()));
+					data.tool.lock().unwrap().enable(&mut data.objects);
+				},
+			))
+			.with_child(Button::new("Selection Tool").on_click(
+				|_ctx, data: &mut GraphicsData, _env| {
+					data.tool.lock().unwrap().disable(&mut data.objects);
+					data.tool = Arc::new(Mutex::new(SelectionTool::new()));
+					data.tool.lock().unwrap().enable(&mut data.objects);
+				},
+			)),
+	);
 	row.add_flex_child(GraphicsWidget::new(), 1.0);
-	row.debug_paint_layout()
+	row
 }
 
 fn main() -> Result<(), PlatformError> {
-	AppLauncher::with_window(WindowDesc::new(build_ui))
-		.configure_env(|env, _| {
-			env.set(
-				theme::WINDOW_BACKGROUND_COLOR,
-				Color::rgba(0.0, 0.0, 0.0, 0.0),
-			)
-		})
-		.launch(GraphicsData {
-			objects: ordset![],
-			preview: None,
-			tool: Rc::new(Box::new(FractalLineTool::new())),
-		})?;
+	AppLauncher::with_window(WindowDesc::new(build_ui)).launch(GraphicsData {
+		objects: ordset![],
+		preview: None,
+		tool: Arc::new(Mutex::new(FractalLineTool::new())),
+	})?;
 	Ok(())
 }
