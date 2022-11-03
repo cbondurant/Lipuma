@@ -61,7 +61,7 @@ impl RenderObject {
 	pub fn paint(&self, ctx: &mut druid::PaintCtx, env: &druid::Env) {
 		ctx.with_save(|newctx| {
 			newctx.transform(self.transform);
-			self.drawable.paint(newctx, env, &self);
+			self.drawable.paint(newctx, env, self);
 		});
 	}
 

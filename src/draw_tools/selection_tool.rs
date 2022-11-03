@@ -60,13 +60,9 @@ impl SelectionTool {
 }
 
 impl Tool for SelectionTool {
-	fn enable(&mut self, _data: &mut OrdSet<RenderObject>) {
-		()
-	}
+	fn enable(&mut self, _data: &mut OrdSet<RenderObject>) {}
 
-	fn disable(&mut self, _data: &mut OrdSet<RenderObject>) {
-		()
-	}
+	fn disable(&mut self, _data: &mut OrdSet<RenderObject>) {}
 
 	fn event(
 		&mut self,
