@@ -2,7 +2,6 @@ use std::sync::{Arc, Mutex};
 
 use draw_tools::fractal_line_tool::FractalLineTool;
 use draw_tools::selection_tool::SelectionTool;
-use draw_tools::tool::Tool;
 use druid::im::ordset;
 use druid::widget::{Button, Flex};
 use druid::{AppLauncher, PlatformError, Widget, WindowDesc};

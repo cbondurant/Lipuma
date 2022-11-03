@@ -2,16 +2,51 @@ use druid::{
 	kurbo::{BezPath, PathEl, Shape},
 	Color, Data, Point, Rect, RenderContext, Vec2,
 };
-use noise::{NoiseFn, OpenSimplex};
-use std::rc::Rc;
 
 use super::{drawable::Drawable, RenderObject};
 
-#[derive(Data, Clone, Debug)]
+#[derive(Data, Clone, Debug, Default)]
+pub struct FractalNoise {
+	seed: u32,
+}
+
+impl FractalNoise {
+	pub fn new(seed: u32) -> Self {
+		Self { seed }
+	}
+
+	// Information taken from skeeto/hash-prospector
+	#[inline(always)]
+	fn get_hash(mut i: u32) -> u32 {
+		i ^= i >> 16;
+		i = i.overflowing_mul(0x21f0aaad).0;
+		i ^= i >> 15;
+		i = i.overflowing_mul(0xd35a2d97).0;
+		i ^= i >> 15;
+		i
+	}
+
+	#[inline(always)]
+	fn smooth_step(start: f64, end: f64, x: f64) -> f64 {
+		start + (((3.0 * x.powi(2)) - (2.0 * x.powi(3))) * (end - start))
+	}
+
+	pub fn get(&self, distance: f64) -> f64 {
+		FractalNoise::smooth_step(
+			((Self::get_hash(self.seed.wrapping_mul(distance.floor() as u32)) % 3) as i32 - 1)
+				as f64,
+			((Self::get_hash(self.seed.wrapping_mul(distance.ceil() as u32)) % 3) as i32 - 1)
+				as f64,
+			distance.fract(),
+		)
+	}
+}
+
+#[derive(Data, Clone, Debug, Default)]
 pub struct FractalLine {
 	pub start: Point,
 	pub end: Point,
-	pub noise: Rc<OpenSimplex>,
+	pub noise: FractalNoise,
 	pub width: f64,
 	pub density: f64,
 	pub samples: i32,
@@ -60,8 +95,8 @@ impl Iterator for FractalLinePathIter {
 
 		let simplex_distance = self.real_length * index * self.line_data.density;
 		let mut simplex = 0.0;
-		for i in 0..self.line_data.octaves {
-			simplex += self.line_data.noise.get([simplex_distance * i as f64, 0.0])
+		for i in 1..self.line_data.octaves + 1 {
+			simplex += self.line_data.noise.get(simplex_distance * i as f64)
 				* 3.0 * self.line_data.laurancity.powi(i.into());
 		}
 		Some(druid::piet::kurbo::PathEl::LineTo(
@@ -91,7 +126,7 @@ impl Shape for FractalLine {
 	}
 
 	fn bounding_box(&self) -> Rect {
-		Rect::from_points(self.start, self.end).inflate(self.width * 1.5, self.width * 1.5)
+		Rect::from_points(self.start, self.end).inflate(self.width * 10.5, self.width * 10.5)
 	}
 }
 

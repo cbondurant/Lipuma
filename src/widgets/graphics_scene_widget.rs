@@ -1,18 +1,10 @@
-use std::rc::Rc;
-
 use druid::im::OrdSet;
 use druid::Color;
-use druid::Point;
 use druid::RenderContext;
 use druid::{Data, Widget};
 
-use noise::OpenSimplex;
-
 use super::graphics_data::GraphicsData;
 use crate::render_objects::RenderObject;
-
-#[derive(Data, Clone, Debug)]
-pub struct Line(Point, Point, Rc<OpenSimplex>);
 
 pub struct GraphicsWidget {
 	change_list: OrdSet<RenderObject>,
