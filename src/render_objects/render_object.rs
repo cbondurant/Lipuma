@@ -1,17 +1,16 @@
-use super::drawable::Drawable;
+use super::drawable::DrawableObj;
 use druid::Affine;
 use druid::Color;
 use druid::Data;
 use druid::RenderContext;
 use std::fmt::Debug;
-use std::rc::Rc;
 
 #[derive(Data, Clone)]
 pub struct RenderObject {
 	pub z: u32,
 	pub transform: Affine,
 	pub selected: bool,
-	pub drawable: Rc<Box<dyn Drawable>>,
+	pub drawable: DrawableObj,
 }
 
 impl Debug for RenderObject {
@@ -26,32 +25,18 @@ impl Debug for RenderObject {
 
 impl Ord for RenderObject {
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		match self.z.cmp(&other.z) {
-			std::cmp::Ordering::Equal => {
-				Rc::as_ptr(&self.drawable).cmp(&Rc::as_ptr(&other.drawable))
-			}
-			ord => ord,
-		}
+		self.z.cmp(&other.z)
 	}
 }
 impl PartialOrd for RenderObject {
 	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		match self.z.partial_cmp(&other.z) {
-			Some(std::cmp::Ordering::Equal) => {
-				Rc::as_ptr(&self.drawable).partial_cmp(&Rc::as_ptr(&other.drawable))
-			}
-			Some(ord) => Some(ord),
-			None => None,
-		}
+		self.z.partial_cmp(&other.z)
 	}
 }
 
 impl PartialEq for RenderObject {
 	fn eq(&self, other: &Self) -> bool {
-		self.z == other.z
-			&& Rc::ptr_eq(&self.drawable, &other.drawable)
-			&& self.selected == other.selected
-			&& self.transform == other.transform
+		self.z == other.z && self.selected == other.selected && self.transform == other.transform
 	}
 }
 
@@ -65,7 +50,7 @@ impl RenderObject {
 		});
 	}
 
-	pub fn new(z: u32, drawable: Rc<Box<dyn Drawable>>) -> Self {
+	pub fn new(z: u32, drawable: DrawableObj) -> Self {
 		Self {
 			z,
 			transform: Affine::new([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
@@ -74,8 +59,8 @@ impl RenderObject {
 		}
 	}
 
-	pub fn get_drawable(&self) -> Rc<Box<dyn Drawable>> {
-		Rc::clone(&self.drawable)
+	pub fn get_drawable(&self) -> &DrawableObj {
+		&self.drawable
 	}
 
 	#[allow(dead_code)] // Exists for possible debug use

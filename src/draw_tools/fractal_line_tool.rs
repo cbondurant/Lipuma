@@ -1,9 +1,9 @@
 use druid::{im::OrdSet, Data, Point};
 use rand::random;
 use std::default::Default;
-use std::rc::Rc;
 
 use crate::render_objects::{
+	drawable::DrawableObj,
 	fractal_line::{FractalLine, FractalNoise},
 	RenderObject,
 };
@@ -130,7 +130,7 @@ impl Tool for FractalLineTool {
 		match self.state {
 			ToolState::Drawing => Some(RenderObject::new(
 				u32::MAX,
-				Rc::new(Box::new(self.preview.clone())),
+				DrawableObj::FractalLine(self.preview.clone()),
 			)),
 			ToolState::Standby => None,
 		}

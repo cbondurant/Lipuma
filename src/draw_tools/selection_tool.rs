@@ -1,8 +1,7 @@
-use std::rc::Rc;
-
 use super::tool::Tool;
 use druid::{im::OrdSet, Data, Event, Point, Rect};
 
+use crate::render_objects::drawable::DrawableObj;
 use crate::render_objects::{selection_rect::SelectionRect, RenderObject};
 
 #[derive(Data, Debug, Clone, PartialEq, Eq)]
@@ -92,10 +91,10 @@ impl Tool for SelectionTool {
 		match self.state {
 			SelectionState::Active => Some(RenderObject::new(
 				u32::MAX,
-				Rc::new(Box::new(SelectionRect::new(Rect::from_points(
+				DrawableObj::SelectionRect(SelectionRect::new(Rect::from_points(
 					self.start_coord,
 					self.end_coord,
-				)))),
+				))),
 			)),
 			SelectionState::Inactive => None,
 		}

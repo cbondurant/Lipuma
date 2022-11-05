@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 druid = {version = "0.7.0", features = ["im", "svg", "image"]}
 rand = "0.8.5"
+trait_enum = "0.5.0"
 
 [profile.release]
 debug = 1

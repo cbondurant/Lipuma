@@ -5,7 +5,7 @@ use druid::{
 
 use super::{drawable::Drawable, RenderObject};
 
-#[derive(Data, Clone, Debug, Default)]
+#[derive(Data, Clone, Debug, Default, PartialEq, Eq)]
 pub struct FractalNoise {
 	seed: u32,
 }
@@ -42,7 +42,7 @@ impl FractalNoise {
 	}
 }
 
-#[derive(Data, Clone, Debug, Default)]
+#[derive(Data, Clone, Debug, Default, PartialEq)]
 pub struct FractalLine {
 	pub start: Point,
 	pub end: Point,

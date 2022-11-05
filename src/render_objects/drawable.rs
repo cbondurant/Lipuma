@@ -1,4 +1,7 @@
-use druid::{kurbo::BezPath, Rect};
+use super::fractal_line::FractalLine;
+use super::selection_rect::SelectionRect;
+use druid::{kurbo::BezPath, Data, Rect};
+use trait_enum::trait_enum;
 
 use super::RenderObject;
 
@@ -15,4 +18,12 @@ pub trait Drawable {
 		sctx: &RenderObject,
 	);
 	fn paint(&self, ctx: &mut druid::PaintCtx, env: &druid::Env, sctx: &RenderObject);
+}
+
+trait_enum! {
+	#[derive(Data, Clone)]
+	pub enum DrawableObj: Drawable {
+		FractalLine,
+		SelectionRect
+	}
 }

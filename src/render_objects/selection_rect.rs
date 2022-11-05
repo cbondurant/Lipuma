@@ -1,13 +1,14 @@
 use druid::{
 	kurbo::Shape,
 	piet::{PaintBrush, StrokeStyle},
-	Color, Rect, RenderContext,
+	Color, Data, Rect, RenderContext,
 };
 
 use super::drawable::Drawable;
 
 const SELECTION_BRUSH: PaintBrush = PaintBrush::Color(Color::BLACK);
 
+#[derive(Data, Clone)]
 pub struct SelectionRect {
 	rect: Rect,
 }
@@ -37,7 +38,7 @@ impl Drawable for SelectionRect {
 		todo!()
 	}
 
-	fn paint(&self, ctx: &mut druid::PaintCtx, env: &druid::Env, sctx: &super::RenderObject) {
+	fn paint(&self, ctx: &mut druid::PaintCtx, _env: &druid::Env, _sctx: &super::RenderObject) {
 		ctx.stroke_styled(
 			self.rect,
 			&SELECTION_BRUSH,
