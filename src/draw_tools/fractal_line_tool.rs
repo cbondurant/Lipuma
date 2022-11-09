@@ -124,7 +124,7 @@ impl Tool for FractalLineTool {
 		match self.state {
 			ToolState::Drawing => Some(RenderObject::new(
 				u32::MAX,
-				Drawable::FractalLine(self.preview.clone()),
+				Drawable::FractalLine(self.preview),
 			)),
 			ToolState::Standby => None,
 		}

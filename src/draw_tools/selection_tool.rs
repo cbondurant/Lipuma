@@ -37,7 +37,7 @@ impl SelectionTool {
 						| druid::kurbo::PathEl::QuadTo(_, p)
 						| druid::kurbo::PathEl::CurveTo(_, _, p) => {
 							if bound.contains(p) {
-								let mut new_item = item.clone();
+								let mut new_item = *item;
 								new_item.select();
 								data.remove(item);
 								data.insert(new_item);
@@ -49,7 +49,7 @@ impl SelectionTool {
 				}
 			}
 
-			let mut new_item = item.clone();
+			let mut new_item = *item;
 			new_item.deselect();
 			data.remove(item);
 			data.insert(new_item);

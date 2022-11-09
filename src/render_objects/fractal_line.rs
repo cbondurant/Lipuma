@@ -40,7 +40,7 @@ impl FractalNoise {
 	pub fn get(&self, distance: f64) -> f64 {
 		let mut val = 0.0;
 		for i in 1..self.octaves {
-			let dist_scaled = distance * (2.0 as f64).powi(i.into()) as f64;
+			let dist_scaled = distance * 2.0_f64.powi(i.into()) as f64;
 			val += FractalNoise::smooth_step(
 				((Self::get_hash(self.seed.wrapping_mul(dist_scaled.floor() as u32)) % 3) as i32
 					- 1) as f64,
@@ -85,7 +85,7 @@ impl FractalLinePathIter {
 		Self {
 			i: 0,
 			segments,
-			line_data: line_data.clone(),
+			line_data: *line_data,
 			real_length,
 			perpendicular,
 		}

@@ -65,8 +65,8 @@ impl Widget<GraphicsData> for GraphicsWidget {
 			.objects
 			.diff(&data.objects)
 			.filter_map(|diffitem| match diffitem {
-				druid::im::ordset::DiffItem::Add(item) => Some(item.clone()),
-				druid::im::ordset::DiffItem::Update { old: _, new } => Some(new.clone()),
+				druid::im::ordset::DiffItem::Add(item) => Some(*item),
+				druid::im::ordset::DiffItem::Update { old: _, new } => Some(*new),
 				druid::im::ordset::DiffItem::Remove(_) => None,
 			})
 			.collect();
@@ -74,11 +74,11 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		for diff in old_data.objects.diff(&data.objects) {
 			match diff {
 				druid::im::ordset::DiffItem::Add(item) => {
-					self.change_list.insert(item.clone());
+					self.change_list.insert(*item);
 					ctx.request_paint_rect(item.get_drawable().AABB());
 				}
 				druid::im::ordset::DiffItem::Update { old, new } => {
-					self.change_list.insert(new.clone());
+					self.change_list.insert(*new);
 					ctx.request_paint_rect(new.get_drawable().AABB());
 					ctx.request_paint_rect(old.get_drawable().AABB());
 				}
@@ -91,7 +91,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		match (&old_data.preview, &data.preview) {
 			(Some(old), Some(new)) => {
 				if !old.same(new) {
-					self.change_list.insert(new.clone());
+					self.change_list.insert(*new);
 				}
 
 				ctx.request_paint_rect(old.get_drawable().AABB());
@@ -101,7 +101,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
 				ctx.request_paint_rect(old.get_drawable().AABB());
 			}
 			(None, Some(new)) => {
-				self.change_list.insert(new.clone());
+				self.change_list.insert(*new);
 				ctx.request_paint_rect(new.get_drawable().AABB());
 			}
 			(None, None) => (),
