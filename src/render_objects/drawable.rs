@@ -21,7 +21,7 @@ pub trait Drawable {
 }
 
 trait_enum! {
-	#[derive(Data, Clone)]
+	#[derive(Data, Clone, Copy)]
 	pub enum DrawableObj: Drawable {
 		FractalLine,
 		SelectionRect

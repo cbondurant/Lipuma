@@ -4,13 +4,13 @@ use druid::{im::OrdSet, Data, Event, Point, Rect};
 use crate::render_objects::drawable::DrawableObj;
 use crate::render_objects::{selection_rect::SelectionRect, RenderObject};
 
-#[derive(Data, Debug, Clone, PartialEq, Eq)]
+#[derive(Data, Debug, Clone, Copy, PartialEq, Eq)]
 enum SelectionState {
 	Active,
 	Inactive,
 }
 
-#[derive(Data, Debug, Clone)]
+#[derive(Data, Debug, Clone, Copy)]
 pub struct SelectionTool {
 	start_coord: Point,
 	end_coord: Point,

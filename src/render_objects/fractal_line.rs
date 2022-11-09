@@ -5,14 +5,20 @@ use druid::{
 
 use super::{drawable::Drawable, RenderObject};
 
-#[derive(Data, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Data, Clone, Copy, Debug, Default, PartialEq)]
 pub struct FractalNoise {
 	seed: u32,
+	pub laurancity: f64,
+	pub octaves: i8,
 }
 
 impl FractalNoise {
-	pub fn new(seed: u32) -> Self {
-		Self { seed }
+	pub fn new(seed: u32, laurancity: f64, octaves: i8) -> Self {
+		Self {
+			seed,
+			laurancity,
+			octaves,
+		}
 	}
 
 	// Information taken from skeeto/hash-prospector
@@ -32,17 +38,22 @@ impl FractalNoise {
 	}
 
 	pub fn get(&self, distance: f64) -> f64 {
-		FractalNoise::smooth_step(
-			((Self::get_hash(self.seed.wrapping_mul(distance.floor() as u32)) % 3) as i32 - 1)
-				as f64,
-			((Self::get_hash(self.seed.wrapping_mul(distance.ceil() as u32)) % 3) as i32 - 1)
-				as f64,
-			distance.fract(),
-		)
+		let mut val = 0.0;
+		for i in 1..self.octaves {
+			let dist_scaled = distance * (2.0 as f64).powi(i.into()) as f64;
+			val += FractalNoise::smooth_step(
+				((Self::get_hash(self.seed.wrapping_mul(dist_scaled.floor() as u32)) % 3) as i32
+					- 1) as f64,
+				((Self::get_hash(self.seed.wrapping_mul(dist_scaled.ceil() as u32)) % 3) as i32 - 1)
+					as f64,
+				dist_scaled.fract(),
+			) * self.laurancity.powi(i.into())
+		}
+		val
 	}
 }
 
-#[derive(Data, Clone, Debug, Default, PartialEq)]
+#[derive(Data, Clone, Copy, Debug, Default, PartialEq)]
 pub struct FractalLine {
 	pub start: Point,
 	pub end: Point,
@@ -50,8 +61,6 @@ pub struct FractalLine {
 	pub width: f64,
 	pub density: f64,
 	pub samples: i32,
-	pub laurancity: f64,
-	pub octaves: i8,
 }
 
 impl FractalLinePathIter {
@@ -94,11 +103,8 @@ impl Iterator for FractalLinePathIter {
 		self.i += 1;
 
 		let simplex_distance = self.real_length * index * self.line_data.density;
-		let mut simplex = 0.0;
-		for i in 1..self.line_data.octaves + 1 {
-			simplex += self.line_data.noise.get(simplex_distance * i as f64)
-				* 3.0 * self.line_data.laurancity.powi(i.into());
-		}
+		let simplex = self.line_data.noise.get(simplex_distance) * 3.0;
+
 		Some(druid::piet::kurbo::PathEl::LineTo(
 			self.line_data.start.lerp(self.line_data.end, index)
 				+ self.perpendicular * self.line_data.width * Self::smooth_to_zero(index) * simplex,

@@ -26,11 +26,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		data: &mut GraphicsData,
 		_env: &druid::Env,
 	) {
-		data.objects = data
-			.tool
-			.lock()
-			.unwrap()
-			.event(event, ctx, data.objects.clone());
+		data.objects = data.tool.event(event, ctx, data.objects.clone());
 		if !ctx.is_handled() {
 			#[allow(clippy::single_match)]
 			// We expect to match other expressions later, but this is the only one that matters now
@@ -42,7 +38,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
 				_ => (),
 			}
 		}
-		data.preview = data.tool.lock().unwrap().get_preview();
+		data.preview = data.tool.get_preview();
 	}
 
 	fn lifecycle(

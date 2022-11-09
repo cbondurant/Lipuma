@@ -1,7 +1,6 @@
-use std::sync::{Arc, Mutex};
-
-use draw_tools::fractal_line_tool::FractalLineTool;
-use draw_tools::selection_tool::SelectionTool;
+use draw_tools::FractalLineTool;
+use draw_tools::SelectionTool;
+use draw_tools::Tool;
 use druid::im::ordset;
 use druid::widget::{Button, Flex};
 use druid::{AppLauncher, PlatformError, Widget, WindowDesc};
@@ -17,16 +16,16 @@ fn build_ui() -> impl Widget<GraphicsData> {
 		Flex::column()
 			.with_child(Button::new("Fractal Line Tool").on_click(
 				|_ctx, data: &mut GraphicsData, _env| {
-					data.tool.lock().unwrap().disable(&mut data.objects);
-					data.tool = Arc::new(Mutex::new(FractalLineTool::new()));
-					data.tool.lock().unwrap().enable(&mut data.objects);
+					data.tool.disable(&mut data.objects);
+					data.tool = Tool::FractalLineTool(FractalLineTool::new());
+					data.tool.enable(&mut data.objects);
 				},
 			))
 			.with_child(Button::new("Selection Tool").on_click(
 				|_ctx, data: &mut GraphicsData, _env| {
-					data.tool.lock().unwrap().disable(&mut data.objects);
-					data.tool = Arc::new(Mutex::new(SelectionTool::new()));
-					data.tool.lock().unwrap().enable(&mut data.objects);
+					data.tool.disable(&mut data.objects);
+					data.tool = Tool::SelectionTool(SelectionTool::new());
+					data.tool.enable(&mut data.objects);
 				},
 			)),
 	);
@@ -38,7 +37,7 @@ fn main() -> Result<(), PlatformError> {
 	AppLauncher::with_window(WindowDesc::new(build_ui)).launch(GraphicsData {
 		objects: ordset![],
 		preview: None,
-		tool: Arc::new(Mutex::new(FractalLineTool::new())),
+		tool: Tool::FractalLineTool(FractalLineTool::new()),
 	})?;
 	Ok(())
 }

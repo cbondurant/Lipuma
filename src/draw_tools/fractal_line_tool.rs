@@ -2,21 +2,17 @@ use druid::{im::OrdSet, Data, Point};
 use rand::random;
 use std::default::Default;
 
-use crate::render_objects::{
-	drawable::DrawableObj,
-	fractal_line::{FractalLine, FractalNoise},
-	RenderObject,
-};
+use crate::render_objects::{fractal_line::FractalNoise, Drawable, FractalLine, RenderObject};
 
 use super::tool::Tool;
 
-#[derive(Data, Clone, PartialEq, Eq, Debug)]
+#[derive(Data, Clone, Copy, PartialEq, Eq, Debug)]
 enum ToolState {
 	Drawing,
 	Standby,
 }
 
-#[derive(Data, Debug, Clone)]
+#[derive(Data, Debug, Clone, Copy)]
 pub struct FractalLineTool {
 	preview: FractalLine,
 	state: ToolState,
@@ -29,7 +25,7 @@ impl FractalLineTool {
 			preview: FractalLine {
 				start: Point::ZERO,
 				end: Point::ZERO,
-				noise: FractalNoise::new(random()),
+				noise: FractalNoise::new(random(), 0.0, 0),
 				..Default::default()
 			},
 			state: ToolState::Standby,
@@ -61,12 +57,10 @@ impl FractalLineTool {
 		self.preview = FractalLine {
 			start: event.pos,
 			end: event.pos,
-			noise: FractalNoise::new(random()),
-			width: 10.0,
+			noise: FractalNoise::new(random(), 0.35, 3),
+			width: 5.0,
 			density: 0.05,
 			samples: 500,
-			laurancity: 0.5,
-			octaves: 3,
 		};
 		ctx.set_handled();
 		data
@@ -130,7 +124,7 @@ impl Tool for FractalLineTool {
 		match self.state {
 			ToolState::Drawing => Some(RenderObject::new(
 				u32::MAX,
-				DrawableObj::FractalLine(self.preview.clone()),
+				Drawable::FractalLine(self.preview.clone()),
 			)),
 			ToolState::Standby => None,
 		}

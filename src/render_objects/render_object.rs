@@ -5,7 +5,7 @@ use druid::Data;
 use druid::RenderContext;
 use std::fmt::Debug;
 
-#[derive(Data, Clone)]
+#[derive(Data, Clone, Copy)]
 pub struct RenderObject {
 	pub z: u32,
 	pub transform: Affine,

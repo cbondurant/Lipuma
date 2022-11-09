@@ -8,7 +8,7 @@ use super::drawable::Drawable;
 
 const SELECTION_BRUSH: PaintBrush = PaintBrush::Color(Color::BLACK);
 
-#[derive(Data, Clone)]
+#[derive(Data, Clone, Copy)]
 pub struct SelectionRect {
 	rect: Rect,
 }
