@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use druid::{
 	kurbo::{PathEl, Shape},
@@ -32,5 +34,9 @@ fn criterion_benchmark(c: &mut Criterion) {
 	});
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group!(
+	name = benches;
+	config = Criterion::default().significance_level(0.01).measurement_time(Duration::from_secs(60));
+	targets = criterion_benchmark
+);
 criterion_main!(benches);
