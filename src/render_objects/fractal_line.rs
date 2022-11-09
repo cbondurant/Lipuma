@@ -41,12 +41,13 @@ impl FractalNoise {
 		let mut val = 0.0;
 		for i in 1..self.octaves {
 			let dist_scaled = distance * 2.0_f64.powi(i.into()) as f64;
+			let floor = dist_scaled.floor();
+			let (ceil, fract) = ((floor + 1.0) as u32, dist_scaled - floor);
+			let floor = floor as u32;
 			val += FractalNoise::smooth_step(
-				((Self::get_hash(self.seed.wrapping_mul(dist_scaled.floor() as u32)) % 3) as i32
-					- 1) as f64,
-				((Self::get_hash(self.seed.wrapping_mul(dist_scaled.ceil() as u32)) % 3) as i32 - 1)
-					as f64,
-				dist_scaled.fract(),
+				((Self::get_hash(self.seed.wrapping_mul(floor)) % 3) as i32 - 1) as f64,
+				((Self::get_hash(self.seed.wrapping_mul(ceil)) % 3) as i32 - 1) as f64,
+				fract,
 			) * self.laurancity.powi(i.into())
 		}
 		val
