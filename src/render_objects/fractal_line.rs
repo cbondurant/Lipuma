@@ -25,9 +25,9 @@ impl FractalNoise {
 	#[inline(always)]
 	fn get_hash(mut i: u32) -> u32 {
 		i ^= i >> 16;
-		i = i.overflowing_mul(0x21f0aaad).0;
+		i = i.wrapping_mul(0x21f0aaad);
 		i ^= i >> 15;
-		i = i.overflowing_mul(0xd35a2d97).0;
+		i = i.wrapping_mul(0xd35a2d97);
 		i ^= i >> 15;
 		i
 	}

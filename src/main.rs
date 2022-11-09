@@ -1,14 +1,11 @@
-use draw_tools::FractalLineTool;
-use draw_tools::SelectionTool;
-use draw_tools::Tool;
 use druid::im::ordset;
 use druid::widget::{Button, Flex};
 use druid::{AppLauncher, PlatformError, Widget, WindowDesc};
+use rust_lipuma::draw_tools::FractalLineTool;
+use rust_lipuma::draw_tools::SelectionTool;
+use rust_lipuma::draw_tools::Tool;
 
-mod draw_tools;
-mod render_objects;
-mod widgets;
-use widgets::{graphics_data::GraphicsData, graphics_scene_widget::*};
+use rust_lipuma::widgets::{graphics_data::GraphicsData, graphics_scene_widget::*};
 
 fn build_ui() -> impl Widget<GraphicsData> {
 	let mut row = Flex::row();
