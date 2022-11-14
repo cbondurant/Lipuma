@@ -10,7 +10,7 @@ enum SelectionState {
 	Inactive,
 }
 
-#[derive(Data, Debug, Clone, Copy)]
+#[derive(Data, Debug, Clone, Copy, PartialEq)]
 pub struct SelectionTool {
 	start_coord: Point,
 	end_coord: Point,
@@ -98,5 +98,11 @@ impl Tool for SelectionTool {
 			)),
 			SelectionState::Inactive => None,
 		}
+	}
+}
+
+impl Default for SelectionTool {
+	fn default() -> Self {
+		Self::new()
 	}
 }

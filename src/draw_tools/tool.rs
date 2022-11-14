@@ -15,10 +15,16 @@ pub trait Tool {
 	) -> OrdSet<RenderObject>;
 
 	fn get_preview(&self) -> Option<RenderObject>;
+
+	fn paint(&self, ctx: &mut druid::PaintCtx, env: &druid::Env) {
+		if let Some(robj) = self.get_preview() {
+			robj.paint(ctx, env)
+		}
+	}
 }
 
 trait_enum! {
-	#[derive(Data, Clone, Copy)]
+	#[derive(Data, Clone, Copy, PartialEq)]
 	pub enum ToolObj : Tool {
 		FractalLineTool,
 		SelectionTool

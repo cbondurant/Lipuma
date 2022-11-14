@@ -12,7 +12,7 @@ enum ToolState {
 	Standby,
 }
 
-#[derive(Data, Debug, Clone, Copy)]
+#[derive(Data, Debug, Clone, Copy, PartialEq)]
 pub struct FractalLineTool {
 	preview: FractalLine,
 	state: ToolState,
@@ -128,5 +128,11 @@ impl Tool for FractalLineTool {
 			)),
 			ToolState::Standby => None,
 		}
+	}
+}
+
+impl Default for FractalLineTool {
+	fn default() -> Self {
+		Self::new()
 	}
 }
