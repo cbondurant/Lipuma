@@ -35,8 +35,8 @@ impl FractalLineTool {
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		data: OrdSet<RenderObject>,
-	) -> OrdSet<RenderObject> {
+		_data: &mut OrdSet<RenderObject>,
+	) {
 		match self.state {
 			ToolState::Drawing => {
 				ctx.set_handled();
@@ -44,15 +44,14 @@ impl FractalLineTool {
 			}
 			ToolState::Standby => (),
 		}
-		data
 	}
 
 	fn on_mouse_down(
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		data: OrdSet<RenderObject>,
-	) -> OrdSet<RenderObject> {
+		_data: &mut OrdSet<RenderObject>,
+	) {
 		self.state = ToolState::Drawing;
 		self.preview = FractalLine {
 			start: event.pos,
@@ -63,7 +62,6 @@ impl FractalLineTool {
 			samples: 500,
 		};
 		ctx.set_handled();
-		data
 	}
 
 	fn on_mouse_up(
@@ -71,8 +69,8 @@ impl FractalLineTool {
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
 
-		mut data: OrdSet<RenderObject>,
-	) -> OrdSet<RenderObject> {
+		data: &mut OrdSet<RenderObject>,
+	) {
 		match self.state {
 			ToolState::Drawing => {
 				self.preview.end = event.pos;
@@ -87,7 +85,6 @@ impl FractalLineTool {
 			}
 			ToolState::Standby => (),
 		}
-		data
 	}
 }
 
@@ -110,13 +107,13 @@ impl Tool for FractalLineTool {
 		&mut self,
 		event: &druid::Event,
 		ctx: &mut druid::EventCtx,
-		data: OrdSet<RenderObject>,
-	) -> OrdSet<RenderObject> {
+		data: &mut OrdSet<RenderObject>,
+	) {
 		match event {
 			druid::Event::MouseDown(event) => self.on_mouse_down(event, ctx, data),
 			druid::Event::MouseUp(event) => self.on_mouse_up(event, ctx, data),
 			druid::Event::MouseMove(event) => self.on_mouse_move(event, ctx, data),
-			_ => data,
+			_ => (),
 		}
 	}
 

@@ -26,7 +26,7 @@ impl SelectionTool {
 		}
 	}
 
-	fn update_selected(&self, mut data: OrdSet<RenderObject>) -> OrdSet<RenderObject> {
+	fn update_selected(&self, data: &mut OrdSet<RenderObject>) {
 		let bound = Rect::from_points(self.start_coord, self.end_coord);
 		'outer: for item in &data.clone() {
 			if !bound.intersect(item.drawable.AABB()).is_empty() {
@@ -54,7 +54,6 @@ impl SelectionTool {
 			data.remove(item);
 			data.insert(new_item);
 		}
-		data
 	}
 }
 
@@ -67,8 +66,8 @@ impl Tool for SelectionTool {
 		&mut self,
 		event: &druid::Event,
 		_ctx: &mut druid::EventCtx,
-		data: OrdSet<RenderObject>,
-	) -> OrdSet<RenderObject> {
+		data: &mut OrdSet<RenderObject>,
+	) {
 		match event {
 			Event::MouseDown(e) => {
 				self.state = SelectionState::Active;
@@ -79,12 +78,11 @@ impl Tool for SelectionTool {
 			Event::MouseMove(e) => {
 				if let SelectionState::Active = self.state {
 					self.end_coord = e.pos;
-					return self.update_selected(data);
+					self.update_selected(data);
 				}
 			}
 			_ => (),
 		}
-		data
 	}
 
 	fn get_preview(&self) -> Option<RenderObject> {

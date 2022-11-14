@@ -1,5 +1,5 @@
 use druid::im::ordset;
-use druid::widget::{Button, ClipBox, Flex};
+use druid::widget::{Button, Flex};
 use druid::{AppLauncher, PlatformError, Widget, WindowDesc};
 use rust_lipuma::draw_tools::FractalLineTool;
 use rust_lipuma::draw_tools::SelectionTool;
@@ -26,7 +26,7 @@ fn build_ui() -> impl Widget<GraphicsData> {
 				},
 			)),
 	);
-	row.add_flex_child(ClipBox::new(GraphicsWidget {}), 1.0);
+	row.add_flex_child(GraphicsWidget::construct_full(), 1.0);
 	row
 }
 

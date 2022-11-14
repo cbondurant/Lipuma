@@ -1,13 +1,70 @@
 use druid::im::OrdSet;
+use druid::widget::ClipBox;
+use druid::widget::Controller;
+use druid::widget::ControllerHost;
 use druid::Color;
+use druid::Event;
+use druid::Point;
 use druid::RenderContext;
 use druid::Widget;
+use druid::WidgetExt;
 
 use super::graphics_data::GraphicsData;
 
-pub struct GraphicsWidget {}
+pub struct GraphicsWidget;
 
-impl GraphicsWidget {}
+#[derive(PartialEq)]
+enum GraphicsControllerState {
+	Passthrough,
+	Panning(Point),
+}
+// Mainly exists to handle panning the viewport
+pub struct GraphicsWidgetController {
+	state: GraphicsControllerState,
+}
+
+impl Controller<GraphicsData, ClipBox<GraphicsData, GraphicsWidget>> for GraphicsWidgetController {
+	fn event(
+		&mut self,
+		child: &mut ClipBox<GraphicsData, GraphicsWidget>,
+		ctx: &mut druid::EventCtx,
+		event: &druid::Event,
+		data: &mut GraphicsData,
+		env: &druid::Env,
+	) {
+		if let Event::MouseDown(e) = event {
+			if e.button.is_middle() {
+				ctx.set_handled();
+				self.state = GraphicsControllerState::Panning(e.pos);
+			}
+		}
+		if let GraphicsControllerState::Panning(origin) = self.state {
+			match event {
+				Event::MouseUp(e) => {
+					if e.button.is_middle() {
+						ctx.set_handled();
+						self.state = GraphicsControllerState::Passthrough;
+					}
+				}
+				Event::MouseMove(e) => {
+					ctx.set_handled();
+					child.pan_by(origin - e.pos);
+				}
+				_ => (),
+			}
+		}
+		child.event(ctx, event, data, env);
+	}
+}
+
+impl GraphicsWidget {
+	pub fn construct_full(
+	) -> ControllerHost<ClipBox<GraphicsData, GraphicsWidget>, GraphicsWidgetController> {
+		ClipBox::new(GraphicsWidget).controller(GraphicsWidgetController {
+			state: GraphicsControllerState::Passthrough,
+		})
+	}
+}
 
 impl Widget<GraphicsData> for GraphicsWidget {
 	fn event(
@@ -17,7 +74,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		data: &mut GraphicsData,
 		_env: &druid::Env,
 	) {
-		data.objects = data.tool.event(event, ctx, data.objects.clone());
+		data.tool.event(event, ctx, &mut data.objects);
 		if !ctx.is_handled() {
 			#[allow(clippy::single_match)]
 			// We expect to match other expressions later, but this is the only one that matters now
