@@ -7,8 +7,8 @@ use druid::{
 };
 use rust_lipuma::render_objects::{fractal_line::FractalNoise, FractalLine};
 
-fn simulate_fractal_noise(n: u32) -> Vec<PathEl> {
-	let mut path_el = Vec::new();
+fn simulate_fractal_noise(n: u32) -> PathEl {
+	let mut p = black_box(PathEl::ClosePath);
 	let mut lines = Vec::new();
 	for _ in 0..n {
 		lines.push(FractalLine {
@@ -22,10 +22,10 @@ fn simulate_fractal_noise(n: u32) -> Vec<PathEl> {
 	}
 	for line in lines {
 		for point in line.path_elements(0.3) {
-			path_el.push(point);
+			p = point;
 		}
 	}
-	path_el
+	p
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
