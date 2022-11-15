@@ -62,6 +62,7 @@ pub struct FractalLine {
 	pub width: f64,
 	pub density: f64,
 	pub samples: i32,
+	pub offset: f64,
 }
 
 impl FractalLinePathIter {
@@ -103,7 +104,8 @@ impl Iterator for FractalLinePathIter {
 		let index = self.i as f64 / self.segments as f64;
 		self.i += 1;
 
-		let simplex_distance = self.real_length * index * self.line_data.density;
+		let simplex_distance =
+			(self.real_length * index * self.line_data.density) + self.line_data.offset;
 		let simplex = self.line_data.noise.get(simplex_distance) * 3.0;
 
 		Some(druid::piet::kurbo::PathEl::LineTo(

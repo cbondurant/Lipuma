@@ -60,6 +60,7 @@ impl FractalLineTool {
 			width: 5.0,
 			density: 0.05,
 			samples: 500,
+			offset: 5.0,
 		};
 		ctx.set_handled();
 	}

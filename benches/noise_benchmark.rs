@@ -18,6 +18,7 @@ fn simulate_fractal_noise(n: u32) -> PathEl {
 			width: 5.0,
 			density: 0.5,
 			samples: 500,
+			offset: 5.0,
 		})
 	}
 	for line in lines {
