@@ -1,68 +1,113 @@
 use druid::im::OrdSet;
-use druid::widget::ClipBox;
-use druid::widget::Controller;
-use druid::widget::ControllerHost;
+use druid::Affine;
 use druid::Color;
 use druid::Event;
 use druid::Point;
+use druid::Rect;
 use druid::RenderContext;
+use druid::Size;
 use druid::Widget;
-use druid::WidgetExt;
 
 use super::graphics_data::GraphicsData;
 
-pub struct GraphicsWidget;
-
-#[derive(PartialEq)]
-enum GraphicsControllerState {
-	Passthrough,
+#[allow(dead_code)] // Dead code allowed for when we decide to add scaling and rotation gestures
+enum GraphicsWidgetState {
+	Standby,
 	Panning(Point),
-}
-// Mainly exists to handle panning the viewport
-pub struct GraphicsWidgetController {
-	state: GraphicsControllerState,
+	Scaling(Point, Point),
+	Rotating(Point, Point),
 }
 
-impl Controller<GraphicsData, ClipBox<GraphicsData, GraphicsWidget>> for GraphicsWidgetController {
-	fn event(
-		&mut self,
-		child: &mut ClipBox<GraphicsData, GraphicsWidget>,
-		ctx: &mut druid::EventCtx,
-		event: &druid::Event,
-		data: &mut GraphicsData,
-		env: &druid::Env,
-	) {
-		if let Event::MouseDown(e) = event {
-			if e.button.is_middle() {
-				ctx.set_handled();
-				self.state = GraphicsControllerState::Panning(e.pos);
-			}
-		}
-		if let GraphicsControllerState::Panning(origin) = self.state {
-			match event {
-				Event::MouseUp(e) => {
-					if e.button.is_middle() {
-						ctx.set_handled();
-						self.state = GraphicsControllerState::Passthrough;
-					}
-				}
-				Event::MouseMove(e) => {
-					ctx.set_handled();
-					child.pan_by(origin - e.pos);
-				}
-				_ => (),
-			}
-		}
-		child.event(ctx, event, data, env);
-	}
+pub struct GraphicsWidget {
+	port: Rect,
+	state: GraphicsWidgetState,
 }
 
 impl GraphicsWidget {
-	pub fn construct_full(
-	) -> ControllerHost<ClipBox<GraphicsData, GraphicsWidget>, GraphicsWidgetController> {
-		ClipBox::new(GraphicsWidget).controller(GraphicsWidgetController {
-			state: GraphicsControllerState::Passthrough,
-		})
+	pub fn new() -> Self {
+		Self {
+			port: Default::default(),
+			state: GraphicsWidgetState::Standby,
+		}
+	}
+
+	fn handle_transformation_events(
+		&mut self,
+		ctx: &mut druid::EventCtx,
+		event: &Event,
+		data: &mut GraphicsData,
+		_env: &druid::Env,
+	) {
+		match event {
+			Event::MouseDown(e) => {
+				if e.button.is_middle() {
+					self.state = GraphicsWidgetState::Panning(e.pos);
+					ctx.set_handled();
+				}
+			}
+			Event::MouseMove(e) => match self.state {
+				GraphicsWidgetState::Standby => (),
+				GraphicsWidgetState::Panning(p) => {
+					data.transform *= Affine::translate(
+						(data.get_rot_scale().inverse() * (e.pos - p).to_point()).to_vec2(),
+					);
+					self.state = GraphicsWidgetState::Panning(e.pos);
+					ctx.set_handled();
+				}
+				GraphicsWidgetState::Scaling(_, _) => todo!(),
+				GraphicsWidgetState::Rotating(_, _) => todo!(),
+			},
+			Event::MouseUp(e) => {
+				if e.button.is_middle() {
+					self.state = GraphicsWidgetState::Standby;
+					ctx.set_handled();
+				}
+			}
+			Event::Wheel(e) => match e.wheel_delta.y.partial_cmp(&0.0) {
+				Some(cmp) => match cmp {
+					std::cmp::Ordering::Less => {
+						data.scale_around_point((data.transform.inverse() * e.pos).to_vec2(), 1.01)
+					}
+					std::cmp::Ordering::Equal => (),
+					std::cmp::Ordering::Greater => data.scale_around_point(
+						(data.transform.inverse() * e.pos).to_vec2(),
+						1.0 / 1.01,
+					),
+				},
+				None => todo!(),
+			},
+			Event::Zoom(s) => {
+				data.transform *= Affine::scale(*s);
+			}
+			_ => (),
+		}
+	}
+
+	pub fn adjust_event_by_transform(e: Event, trans: Affine) -> Event {
+		match e {
+			Event::MouseDown(mut e) => {
+				e.pos = trans * e.pos;
+				Event::MouseDown(e)
+			}
+			Event::MouseMove(mut e) => {
+				e.pos = trans * e.pos;
+				Event::MouseMove(e)
+			}
+			Event::MouseUp(mut e) => {
+				e.pos = trans * e.pos;
+				Event::MouseUp(e)
+			}
+			Event::Wheel(mut e) => {
+				e.pos = trans * e.pos;
+				Event::Wheel(e)
+			}
+			// Only mouse events have positions to modify
+			non_mouse => non_mouse,
+		}
+	}
+
+	pub fn get_offset_to_center_as_affine(&self) -> Affine {
+		Affine::translate((self.port.size() / 2.0).to_vec2())
 	}
 }
 
@@ -70,16 +115,22 @@ impl Widget<GraphicsData> for GraphicsWidget {
 	fn event(
 		&mut self,
 		ctx: &mut druid::EventCtx,
-		event: &druid::Event,
+		event: &Event,
 		data: &mut GraphicsData,
-		_env: &druid::Env,
+		env: &druid::Env,
 	) {
-		data.tool.event(event, ctx, &mut data.objects);
+		self.handle_transformation_events(ctx, event, data, env);
+		if ctx.is_handled() {
+			return;
+		}
+		let trans_event =
+			&Self::adjust_event_by_transform(event.clone(), data.get_trans_to_widget().inverse());
+		data.tool.event(trans_event, ctx, &mut data.objects);
 		if !ctx.is_handled() {
 			#[allow(clippy::single_match)]
 			// We expect to match other expressions later, but this is the only one that matters now
 			match event {
-				druid::Event::WindowSize(_) => {
+				Event::WindowSize(_) => {
 					// Need to request full repaint to ensure everything draws correctly
 					ctx.request_paint();
 				}
@@ -105,25 +156,38 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		data: &GraphicsData,
 		_env: &druid::Env,
 	) {
+		let old_to_widget = old_data.get_trans_to_widget();
+		let to_widget = data.get_trans_to_widget();
+		if old_to_widget != to_widget {
+			ctx.request_paint();
+			return;
+		}
+
 		for diff in old_data.objects.diff(&data.objects) {
 			match diff {
 				druid::im::ordset::DiffItem::Remove(item)
 				| druid::im::ordset::DiffItem::Add(item) => {
-					ctx.request_paint_rect(item.get_drawable().AABB());
+					ctx.request_paint_rect(
+						to_widget.transform_rect_bbox(item.get_drawable().AABB()),
+					);
 				}
 				druid::im::ordset::DiffItem::Update { old, new } => {
-					ctx.request_paint_rect(new.get_drawable().AABB());
-					ctx.request_paint_rect(old.get_drawable().AABB());
+					ctx.request_paint_rect(
+						to_widget.transform_rect_bbox(old.get_drawable().AABB()),
+					);
+					ctx.request_paint_rect(
+						to_widget.transform_rect_bbox(new.get_drawable().AABB()),
+					);
 				}
 			}
 		}
 
 		if old_data.tool != data.tool {
-			if let Some(robj) = old_data.tool.get_preview() {
-				ctx.request_paint_rect(robj.get_drawable().AABB());
+			if let Some(item) = old_data.tool.get_preview() {
+				ctx.request_paint_rect(to_widget.transform_rect_bbox(item.get_drawable().AABB()));
 			}
-			if let Some(robj) = data.tool.get_preview() {
-				ctx.request_paint_rect(robj.get_drawable().AABB());
+			if let Some(item) = data.tool.get_preview() {
+				ctx.request_paint_rect(to_widget.transform_rect_bbox(item.get_drawable().AABB()));
 			}
 		}
 	}
@@ -135,15 +199,26 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		_data: &GraphicsData,
 		_env: &druid::Env,
 	) -> druid::Size {
-		bc.max()
+		self.port = bc
+			.constrain(Size::new(f64::INFINITY, f64::INFINITY))
+			.to_rect();
+		self.port.size()
 	}
 
 	fn paint(&mut self, ctx: &mut druid::PaintCtx, data: &GraphicsData, env: &druid::Env) {
+		// For some reason without this we end up clipping WAY out of bounds on full redraw
+		ctx.clip(self.port);
+
+		// Need this for multiple operations, so reduce calls
+		let to_widget_space = data.get_trans_to_widget();
+
+		// Transform our entire draw context into widget-space
+		ctx.transform(to_widget_space);
+
 		let mut redraw_needed = OrdSet::new();
-		for object in data.objects.iter().cloned() {
-			if !object
-				.get_drawable()
-				.AABB()
+		for object in data.objects.iter() {
+			if !to_widget_space
+				.transform_rect_bbox(object.get_drawable().AABB())
 				.intersect(ctx.region().bounding_box())
 				.is_empty()
 			{

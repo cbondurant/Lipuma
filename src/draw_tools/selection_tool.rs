@@ -6,8 +6,8 @@ use crate::render_objects::{selection_rect::SelectionRect, RenderObject};
 
 #[derive(Data, Debug, Clone, Copy, PartialEq, Eq)]
 enum SelectionState {
-	Active,
-	Inactive,
+	Selecting,
+	Standby,
 }
 
 #[derive(Data, Debug, Clone, Copy, PartialEq)]
@@ -22,7 +22,7 @@ impl SelectionTool {
 		Self {
 			start_coord: Point::ZERO,
 			end_coord: Point::ZERO,
-			state: SelectionState::Inactive,
+			state: SelectionState::Standby,
 		}
 	}
 
@@ -70,13 +70,13 @@ impl Tool for SelectionTool {
 	) {
 		match event {
 			Event::MouseDown(e) => {
-				self.state = SelectionState::Active;
+				self.state = SelectionState::Selecting;
 				self.start_coord = e.pos;
 				self.end_coord = e.pos;
 			}
-			Event::MouseUp(_) => self.state = SelectionState::Inactive,
+			Event::MouseUp(_) => self.state = SelectionState::Standby,
 			Event::MouseMove(e) => {
-				if let SelectionState::Active = self.state {
+				if let SelectionState::Selecting = self.state {
 					self.end_coord = e.pos;
 					self.update_selected(data);
 				}
@@ -87,14 +87,14 @@ impl Tool for SelectionTool {
 
 	fn get_preview(&self) -> Option<RenderObject> {
 		match self.state {
-			SelectionState::Active => Some(RenderObject::new(
+			SelectionState::Selecting => Some(RenderObject::new(
 				u32::MAX,
 				DrawableObj::SelectionRect(SelectionRect::new(Rect::from_points(
 					self.start_coord,
 					self.end_coord,
 				))),
 			)),
-			SelectionState::Inactive => None,
+			SelectionState::Standby => None,
 		}
 	}
 }

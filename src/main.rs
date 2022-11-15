@@ -1,4 +1,3 @@
-use druid::im::ordset;
 use druid::widget::{Button, Flex};
 use druid::{AppLauncher, PlatformError, Widget, WindowDesc};
 use rust_lipuma::draw_tools::FractalLineTool;
@@ -26,15 +25,11 @@ fn build_ui() -> impl Widget<GraphicsData> {
 				},
 			)),
 	);
-	row.add_flex_child(GraphicsWidget::construct_full(), 1.0);
+	row.add_flex_child(GraphicsWidget::new(), 1.0);
 	row
 }
 
 fn main() -> Result<(), PlatformError> {
-	AppLauncher::with_window(WindowDesc::new(build_ui)).launch(GraphicsData {
-		objects: ordset![],
-		preview: None,
-		tool: Tool::FractalLineTool(FractalLineTool::new()),
-	})?;
+	AppLauncher::with_window(WindowDesc::new(build_ui)).launch(GraphicsData::new())?;
 	Ok(())
 }

@@ -1,5 +1,5 @@
-pub mod fractal_line_tool;
-pub mod selection_tool;
+mod fractal_line_tool;
+mod selection_tool;
 pub mod tool;
 
 pub use fractal_line_tool::FractalLineTool;

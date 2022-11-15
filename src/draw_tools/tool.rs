@@ -1,5 +1,5 @@
-use super::fractal_line_tool::FractalLineTool;
-use super::selection_tool::SelectionTool;
+use super::FractalLineTool;
+use super::SelectionTool;
 use crate::render_objects::RenderObject;
 use druid::{im::OrdSet, Data, Event, EventCtx};
 use trait_enum::trait_enum;
@@ -22,6 +22,6 @@ trait_enum! {
 	#[derive(Data, Clone, Copy, PartialEq)]
 	pub enum ToolObj : Tool {
 		FractalLineTool,
-		SelectionTool
+		SelectionTool,
 	}
 }
