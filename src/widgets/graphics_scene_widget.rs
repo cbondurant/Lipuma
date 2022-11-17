@@ -6,28 +6,30 @@ use druid::Point;
 use druid::Rect;
 use druid::RenderContext;
 use druid::Size;
+use druid::Vec2;
 use druid::Widget;
 
 use super::graphics_data::GraphicsData;
 
-#[allow(dead_code)] // Dead code allowed for when we decide to add scaling and rotation gestures
+#[derive(PartialEq)]
 enum GraphicsWidgetState {
-	Standby,
+	Default,
 	Panning(Point),
-	Scaling(Point, Point),
-	Rotating(Point, Point),
+	Rotating(Point),
 }
 
 pub struct GraphicsWidget {
 	port: Rect,
 	state: GraphicsWidgetState,
+	shift_held: bool,
 }
 
 impl GraphicsWidget {
 	pub fn new() -> Self {
 		Self {
 			port: Default::default(),
-			state: GraphicsWidgetState::Standby,
+			state: GraphicsWidgetState::Default,
+			shift_held: false,
 		}
 	}
 
@@ -41,12 +43,16 @@ impl GraphicsWidget {
 		match event {
 			Event::MouseDown(e) => {
 				if e.button.is_middle() {
-					self.state = GraphicsWidgetState::Panning(e.pos);
+					if self.shift_held {
+						self.state = GraphicsWidgetState::Rotating(e.pos);
+					} else {
+						self.state = GraphicsWidgetState::Panning(e.pos);
+					}
 					ctx.set_handled();
 				}
 			}
 			Event::MouseMove(e) => match self.state {
-				GraphicsWidgetState::Standby => (),
+				GraphicsWidgetState::Default => (),
 				GraphicsWidgetState::Panning(p) => {
 					data.transform *= Affine::translate(
 						(data.get_rot_scale().inverse() * (e.pos - p).to_point()).to_vec2(),
@@ -54,12 +60,22 @@ impl GraphicsWidget {
 					self.state = GraphicsWidgetState::Panning(e.pos);
 					ctx.set_handled();
 				}
-				GraphicsWidgetState::Scaling(_, _) => todo!(),
-				GraphicsWidgetState::Rotating(_, _) => todo!(),
+				GraphicsWidgetState::Rotating(p) => {
+					// Cosine rule
+					let center = (self.port.size() / 2.0).to_vec2();
+					let ray_ba = e.pos.to_vec2() - center;
+					let ray_bc = p.to_vec2() - center;
+					let rotation_delta = ray_ba.normalize().atan2() - ray_bc.normalize().atan2();
+					data.rotate_around_point(
+						(data.get_trans_to_widget().inverse() * center.to_point()).to_vec2(),
+						rotation_delta,
+					);
+					self.state = GraphicsWidgetState::Rotating(e.pos);
+				}
 			},
 			Event::MouseUp(e) => {
 				if e.button.is_middle() {
-					self.state = GraphicsWidgetState::Standby;
+					self.state = GraphicsWidgetState::Default;
 					ctx.set_handled();
 				}
 			}
@@ -76,6 +92,16 @@ impl GraphicsWidget {
 				},
 				None => todo!(),
 			},
+			Event::KeyDown(e) => {
+				if (e.code == druid::Code::ShiftLeft) | (e.code == druid::Code::ShiftRight) {
+					self.shift_held = true
+				}
+			}
+			Event::KeyUp(e) => {
+				if (e.code == druid::Code::ShiftLeft) | (e.code == druid::Code::ShiftRight) {
+					self.shift_held = false
+				}
+			}
 			Event::Zoom(s) => {
 				data.transform *= Affine::scale(*s);
 			}
@@ -130,6 +156,9 @@ impl Widget<GraphicsData> for GraphicsWidget {
 			#[allow(clippy::single_match)]
 			// We expect to match other expressions later, but this is the only one that matters now
 			match event {
+				Event::WindowConnected => {
+					ctx.request_focus();
+				}
 				Event::WindowSize(_) => {
 					// Need to request full repaint to ensure everything draws correctly
 					ctx.request_paint();
