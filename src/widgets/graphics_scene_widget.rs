@@ -154,6 +154,19 @@ impl Widget<GraphicsData> for GraphicsWidget {
 					// Need to request full repaint to ensure everything draws correctly
 					ctx.request_paint();
 				}
+				Event::KeyDown(e) => {
+					if e.code == druid::Code::Backspace {
+						let mut to_delete = Vec::new();
+						for object in data.objects.iter() {
+							if object.is_selected() {
+								to_delete.push(object.clone());
+							}
+						}
+						for object in to_delete {
+							data.objects = data.objects.without(&object);
+						}
+					}
+				}
 				_ => (),
 			}
 		}
