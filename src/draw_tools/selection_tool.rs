@@ -1,4 +1,5 @@
 use super::tool::Tool;
+use druid::kurbo::Shape;
 use druid::widget::{Flex, Label};
 use druid::{im::OrdSet, Data, Event, Lens, Point, Rect, Widget};
 
@@ -31,23 +32,22 @@ impl SelectionTool {
 		let bound = Rect::from_points(self.start_coord, self.end_coord);
 		'outer: for item in &data.clone() {
 			if !bound.intersect(item.drawable.AABB()).is_empty() {
-				for segment in item.drawable.fine_collision_shape(1.0) {
+				for segment in item.drawable.fine_collision_shape(5.0).segments() {
 					match segment {
-						druid::kurbo::PathEl::MoveTo(p)
-						| druid::kurbo::PathEl::LineTo(p)
-						| druid::kurbo::PathEl::QuadTo(_, p)
-						| druid::kurbo::PathEl::CurveTo(_, _, p) => {
-							if bound.contains(p) {
-								if !item.is_selected() {
-									let mut new_item = *item;
-									new_item.select();
-									data.remove(item);
-									data.insert(new_item);
+						druid::kurbo::PathSeg::Line(l) => {
+							for check in bound.path_segments(0.01) {
+								if !check.intersect_line(l).is_empty() {
+									if !item.is_selected() {
+										let mut new_item = *item;
+										new_item.select();
+										data.remove(item);
+										data.insert(new_item);
+									}
+									continue 'outer;
 								}
-								continue 'outer;
 							}
 						}
-						druid::kurbo::PathEl::ClosePath => todo!(),
+						_ => todo!(),
 					}
 				}
 			}

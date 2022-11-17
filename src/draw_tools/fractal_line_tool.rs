@@ -20,8 +20,8 @@ pub struct FractalLineTool {
 	preview: FractalLine,
 	state: ToolState,
 	default_width: f64,
-	default_density: f64,
-	default_samples: i32,
+	wavelength: f64,
+	default_sample_distance: f64,
 	default_offset: f64,
 	default_laurancity: f64,
 	default_octaves: i8,
@@ -39,8 +39,8 @@ impl FractalLineTool {
 			},
 			state: ToolState::Standby,
 			default_width: 5.0,
-			default_density: 0.05,
-			default_samples: 500,
+			wavelength: 5.0,
+			default_sample_distance: 2.0,
 			default_offset: 5.0,
 			default_octaves: 3,
 			default_laurancity: 0.35,
@@ -74,8 +74,8 @@ impl FractalLineTool {
 			end: event.pos,
 			noise: FractalNoise::new(random(), self.default_laurancity, self.default_octaves),
 			width: self.default_width,
-			density: self.default_density,
-			samples: self.default_samples,
+			wavelength: self.wavelength,
+			sample_distance: self.default_sample_distance,
 			offset: self.default_offset,
 		};
 		ctx.set_handled();
@@ -108,8 +108,8 @@ impl FractalLineTool {
 		Flex::column()
 			.with_child(Label::new("Fractal Line Tool"))
 			.with_child(slider_with_label(0.0, 10.0, Self::default_width))
-			.with_child(slider_with_label(0.0, 0.1, Self::default_density))
-			.with_child(integer_stepper(0, 1000, Self::default_samples))
+			.with_child(slider_with_label(1.0, 10.0, Self::wavelength))
+			.with_child(slider_with_label(0.1, 10.0, Self::default_sample_distance))
 			.with_child(integer_stepper(
 				0,
 				5,

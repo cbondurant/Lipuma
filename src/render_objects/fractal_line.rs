@@ -60,8 +60,8 @@ pub struct FractalLine {
 	pub end: Point,
 	pub noise: FractalNoise,
 	pub width: f64,
-	pub density: f64,
-	pub samples: i32,
+	pub wavelength: f64,
+	pub sample_distance: f64,
 	pub offset: f64,
 }
 
@@ -73,20 +73,24 @@ impl FractalLinePathIter {
 
 pub struct FractalLinePathIter {
 	i: i32,
-	segments: i32,
+	segments: f64,
 	line_data: FractalLine,
 	real_length: f64,
 	perpendicular: Vec2,
 }
 
 impl FractalLinePathIter {
-	pub fn new(line_data: &FractalLine, segments: i32) -> Self {
+	pub fn new(line_data: &FractalLine, resolution: f64) -> Self {
 		let dir = line_data.start - line_data.end;
 		let real_length = dir.to_point().distance(Point::ZERO);
 		let perpendicular = Vec2::new(dir.y, -dir.x).normalize();
+		println!(
+			"segments: {}",
+			((real_length / line_data.wavelength) / resolution)
+		);
 		Self {
 			i: 0,
-			segments,
+			segments: ((real_length / line_data.wavelength) / resolution),
 			line_data: *line_data,
 			real_length,
 			perpendicular,
@@ -98,14 +102,19 @@ impl Iterator for FractalLinePathIter {
 	type Item = PathEl;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if self.i > self.segments {
+		if self.i > self.segments as i32 {
 			return None;
+		}
+
+		if self.i == self.segments as i32 {
+			self.i += 1;
+			return Some(druid::piet::kurbo::PathEl::LineTo(self.line_data.end));
 		}
 		let index = self.i as f64 / self.segments as f64;
 		self.i += 1;
 
 		let simplex_distance =
-			(self.real_length * index * self.line_data.density) + self.line_data.offset;
+			(self.real_length * index / self.line_data.wavelength) + self.line_data.offset;
 		let simplex = self.line_data.noise.get(simplex_distance) * 3.0;
 
 		Some(druid::piet::kurbo::PathEl::LineTo(
@@ -118,8 +127,12 @@ impl Iterator for FractalLinePathIter {
 impl Shape for FractalLine {
 	type PathElementsIter = FractalLinePathIter;
 
-	fn path_elements(&self, _tolerance: f64) -> Self::PathElementsIter {
-		FractalLinePathIter::new(self, self.samples)
+	fn path_elements(&self, tolerance: f64) -> Self::PathElementsIter {
+		if tolerance < 0.1 {
+			FractalLinePathIter::new(self, 0.1)
+		} else {
+			FractalLinePathIter::new(self, tolerance)
+		}
 	}
 
 	fn area(&self) -> f64 {
