@@ -256,3 +256,9 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		ctx.restore().unwrap();
 	}
 }
+
+impl Default for GraphicsWidget {
+	fn default() -> Self {
+		Self::new()
+	}
+}

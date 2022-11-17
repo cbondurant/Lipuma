@@ -55,3 +55,9 @@ impl GraphicsData {
 			Affine::translate(p) * Affine::rotate(th) * Affine::translate(p).inverse();
 	}
 }
+
+impl Default for GraphicsData {
+	fn default() -> Self {
+		Self::new()
+	}
+}
