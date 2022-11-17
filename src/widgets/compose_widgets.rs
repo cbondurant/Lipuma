@@ -3,7 +3,8 @@
 /// Composed widgets are any that are built using the existing WidgetExt functions
 /// and any Control wrappers. Im putting them here since they dont have a regular
 /// struct organizational system to use instead.
-use druid::{text::format::ParseFormatter, widget::*, Data, Lens, LensExt, Widget, WidgetExt};
+use druid::text::format::ParseFormatter;
+use druid::{widget::*, Data, Lens, LensExt, Widget, WidgetExt};
 use tool::ToolObj;
 
 use crate::draw_tools::{tool, FractalLineTool, SelectionTool};

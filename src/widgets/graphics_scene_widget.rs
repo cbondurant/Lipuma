@@ -1,13 +1,4 @@
-use druid::im::OrdSet;
-use druid::Affine;
-use druid::Color;
-use druid::Event;
-use druid::Point;
-use druid::Rect;
-use druid::RenderContext;
-use druid::Size;
-use druid::Vec2;
-use druid::Widget;
+use druid::{im::OrdSet, Affine, Color, Event, Point, Rect, RenderContext, Size, Widget};
 
 use super::graphics_data::GraphicsData;
 

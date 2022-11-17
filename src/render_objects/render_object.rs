@@ -1,8 +1,5 @@
 use super::drawable::DrawableObj;
-use druid::Affine;
-use druid::Color;
-use druid::Data;
-use druid::RenderContext;
+use druid::{Affine, Color, Data, RenderContext};
 use std::fmt::Debug;
 
 #[derive(Data, Clone, Copy)]

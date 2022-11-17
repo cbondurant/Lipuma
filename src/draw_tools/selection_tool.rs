@@ -1,7 +1,6 @@
 use super::tool::Tool;
 use druid::widget::{Flex, Label};
-use druid::{im::OrdSet, Data, Event, Point, Rect};
-use druid::{Lens, Widget};
+use druid::{im::OrdSet, Data, Event, Lens, Point, Rect, Widget};
 
 use crate::render_objects::drawable::DrawableObj;
 use crate::render_objects::{selection_rect::SelectionRect, RenderObject};
