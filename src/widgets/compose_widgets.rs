@@ -18,10 +18,11 @@ pub fn settings_menu() -> impl Widget<GraphicsData> {
 }
 
 pub fn tool_selection_button(tool: ToolObj, name: &str) -> impl Widget<GraphicsData> {
-	Button::new(name).on_click(move |_ctx, data: &mut GraphicsData, _env| {
+	Button::new(name).on_click(move |ctx, data: &mut GraphicsData, _env| {
 		data.tool.disable(&mut data.objects);
 		data.tool = tool;
 		data.tool.enable(&mut data.objects);
+		ctx.request_layout();
 	})
 }
 
