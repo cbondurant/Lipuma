@@ -1,9 +1,9 @@
 use crate::draw_tools::{FractalLineTool, Tool};
 use crate::render_objects::RenderObject;
 use druid::im::OrdSet;
-use druid::{Affine, Data, Vec2};
+use druid::{Affine, Data, Lens, Vec2};
 
-#[derive(Data, Clone)]
+#[derive(Data, Clone, Lens)]
 pub struct GraphicsData {
 	pub objects: OrdSet<RenderObject>,
 	pub preview: Option<RenderObject>,

@@ -2,6 +2,7 @@ use super::FractalLineTool;
 use super::SelectionTool;
 use crate::render_objects::RenderObject;
 use druid::{im::OrdSet, Data, Event, EventCtx};
+use druid_enums::Matcher;
 use trait_enum::trait_enum;
 
 pub trait Tool {
@@ -19,7 +20,7 @@ pub trait Tool {
 }
 
 trait_enum! {
-	#[derive(Data, Clone, Copy, PartialEq)]
+	#[derive(Data, Clone, Copy, PartialEq, Matcher)]
 	pub enum ToolObj : Tool {
 		FractalLineTool,
 		SelectionTool,

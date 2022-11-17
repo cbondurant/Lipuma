@@ -1,8 +1,11 @@
-use druid::{im::OrdSet, Data, Point};
+use druid::{im::OrdSet, widget::*, Data, Lens, LensExt, Point, Widget};
 use rand::random;
 use std::default::Default;
 
-use crate::render_objects::{fractal_line::FractalNoise, Drawable, FractalLine, RenderObject};
+use crate::{
+	render_objects::{fractal_line::FractalNoise, Drawable, FractalLine, RenderObject},
+	widgets::compose_widgets::{integer_stepper, slider_with_label},
+};
 
 use super::tool::Tool;
 
@@ -12,10 +15,16 @@ enum ToolState {
 	Standby,
 }
 
-#[derive(Data, Debug, Clone, Copy, PartialEq)]
+#[derive(Data, Debug, Clone, Copy, PartialEq, Lens)]
 pub struct FractalLineTool {
 	preview: FractalLine,
 	state: ToolState,
+	default_width: f64,
+	default_density: f64,
+	default_samples: i32,
+	default_offset: f64,
+	default_laurancity: f64,
+	default_octaves: i8,
 }
 
 impl FractalLineTool {
@@ -29,8 +38,15 @@ impl FractalLineTool {
 				..Default::default()
 			},
 			state: ToolState::Standby,
+			default_width: 5.0,
+			default_density: 0.05,
+			default_samples: 500,
+			default_offset: 5.0,
+			default_octaves: 3,
+			default_laurancity: 0.35,
 		}
 	}
+
 	fn on_mouse_move(
 		&mut self,
 		event: &druid::MouseEvent,
@@ -56,11 +72,11 @@ impl FractalLineTool {
 		self.preview = FractalLine {
 			start: event.pos,
 			end: event.pos,
-			noise: FractalNoise::new(random(), 0.35, 3),
-			width: 5.0,
-			density: 0.05,
-			samples: 500,
-			offset: 5.0,
+			noise: FractalNoise::new(random(), self.default_laurancity, self.default_octaves),
+			width: self.default_width,
+			density: self.default_density,
+			samples: self.default_samples,
+			offset: self.default_offset,
 		};
 		ctx.set_handled();
 	}
@@ -86,6 +102,21 @@ impl FractalLineTool {
 			}
 			ToolState::Standby => (),
 		}
+	}
+
+	pub fn get_configuration() -> impl Widget<Self> {
+		Flex::column()
+			.with_child(Label::new("Fractal Line Tool"))
+			.with_child(slider_with_label(0.0, 10.0, Self::default_width))
+			.with_child(slider_with_label(0.0, 0.1, Self::default_density))
+			.with_child(integer_stepper(0, 1000, Self::default_samples))
+			.with_child(integer_stepper(
+				0,
+				5,
+				Self::default_octaves.map(|v| *v as i32, |v, new| *v = new as i8),
+			))
+			.with_child(slider_with_label(0.0, 10.0, Self::default_offset))
+			.with_child(slider_with_label(0.0, 0.5, Self::default_laurancity))
 	}
 }
 

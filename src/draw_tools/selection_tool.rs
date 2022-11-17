@@ -1,5 +1,7 @@
 use super::tool::Tool;
+use druid::widget::{Flex, Label};
 use druid::{im::OrdSet, Data, Event, Point, Rect};
+use druid::{Lens, Widget};
 
 use crate::render_objects::drawable::DrawableObj;
 use crate::render_objects::{selection_rect::SelectionRect, RenderObject};
@@ -10,7 +12,7 @@ enum SelectionState {
 	Standby,
 }
 
-#[derive(Data, Debug, Clone, Copy, PartialEq)]
+#[derive(Data, Debug, Clone, Copy, PartialEq, Lens)]
 pub struct SelectionTool {
 	start_coord: Point,
 	end_coord: Point,
@@ -58,6 +60,10 @@ impl SelectionTool {
 				data.insert(new_item);
 			}
 		}
+	}
+
+	pub fn get_configuration() -> impl Widget<Self> {
+		Flex::column().with_child(Label::new("Selection Tool"))
 	}
 }
 

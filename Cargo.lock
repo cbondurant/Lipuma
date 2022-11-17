@@ -514,6 +514,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "druid-enums"
+version = "0.1.0"
+source = "git+https://github.com/finnerale/druid-enums#ed307acce2207ad0997985ca5c18ff827be1f9d3"
+dependencies = [
+ "heck",
+ "log",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "druid-shell"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1617,6 +1629,8 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "druid",
+ "druid-enums",
+ "log",
  "rand",
  "trait_enum",
 ]
