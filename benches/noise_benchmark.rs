@@ -13,11 +13,11 @@ fn simulate_fractal_noise(n: u32) -> PathEl {
 	for _ in 0..n {
 		lines.push(FractalLine {
 			start: Point::ZERO,
-			end: Point::ZERO,
+			end: Point::new(1000.0, 0.0),
 			noise: FractalNoise::new(n, 0.3, 3),
 			width: 5.0,
-			density: 0.5,
-			samples: 500,
+			wavelength: 1.0,
+			sample_distance: 2.0,
 			offset: 5.0,
 		})
 	}
