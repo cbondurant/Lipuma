@@ -4,7 +4,6 @@ use std::fmt::Debug;
 
 #[derive(Data, Clone, Copy)]
 pub struct RenderObject {
-	pub z: u32,
 	pub transform: Affine,
 	pub selected: bool,
 	pub drawable: DrawableObj,
@@ -13,31 +12,11 @@ pub struct RenderObject {
 impl Debug for RenderObject {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("RenderObject")
-			.field("z", &self.z)
 			.field("transform", &self.transform)
 			.field("drawable", &self.drawable.AABB())
 			.finish()
 	}
 }
-
-impl Ord for RenderObject {
-	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		self.z.cmp(&other.z)
-	}
-}
-impl PartialOrd for RenderObject {
-	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		self.z.partial_cmp(&other.z)
-	}
-}
-
-impl PartialEq for RenderObject {
-	fn eq(&self, other: &Self) -> bool {
-		self.z == other.z && self.selected == other.selected && self.transform == other.transform
-	}
-}
-
-impl Eq for RenderObject {}
 
 impl RenderObject {
 	pub fn paint(&self, ctx: &mut druid::PaintCtx, env: &druid::Env) {
@@ -47,9 +26,8 @@ impl RenderObject {
 		});
 	}
 
-	pub fn new(z: u32, drawable: DrawableObj) -> Self {
+	pub fn new(drawable: DrawableObj) -> Self {
 		Self {
-			z,
 			transform: Affine::new([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
 			drawable,
 			selected: false,

@@ -1,4 +1,4 @@
-use druid::{im::OrdSet, widget::*, Data, Lens, LensExt, Point, Widget};
+use druid::{im::Vector, widget::*, Data, Lens, LensExt, Point, Widget};
 use rand::random;
 use std::default::Default;
 
@@ -51,7 +51,7 @@ impl FractalLineTool {
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		_data: &mut OrdSet<RenderObject>,
+		_data: &mut Vector<RenderObject>,
 	) {
 		match self.state {
 			ToolState::Drawing => {
@@ -66,7 +66,7 @@ impl FractalLineTool {
 		&mut self,
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
-		_data: &mut OrdSet<RenderObject>,
+		_data: &mut Vector<RenderObject>,
 	) {
 		self.state = ToolState::Drawing;
 		self.preview = FractalLine {
@@ -86,18 +86,14 @@ impl FractalLineTool {
 		event: &druid::MouseEvent,
 		ctx: &mut druid::EventCtx,
 
-		data: &mut OrdSet<RenderObject>,
+		data: &mut Vector<RenderObject>,
 	) {
 		match self.state {
 			ToolState::Drawing => {
 				self.preview.end = event.pos;
-				let mut obj = self.get_preview().unwrap();
-				obj.z = match data.get_max() {
-					Some(obj) => obj.z + 1,
-					None => 0,
-				};
+				let obj = self.get_preview().unwrap();
 				self.state = ToolState::Standby;
-				data.insert(obj);
+				data.push_back(obj);
 				ctx.is_handled();
 			}
 			ToolState::Standby => (),
@@ -121,15 +117,15 @@ impl FractalLineTool {
 }
 
 impl Tool for FractalLineTool {
-	fn enable(&mut self, _data: &mut OrdSet<RenderObject>) {
+	fn enable(&mut self, _data: &mut Vector<RenderObject>) {
 		self.state = ToolState::Standby;
 	}
 
-	fn disable(&mut self, data: &mut OrdSet<RenderObject>) {
+	fn disable(&mut self, data: &mut Vector<RenderObject>) {
 		match self.state {
 			ToolState::Drawing => {
 				// get_preview always returns some when drawing
-				data.insert(self.get_preview().unwrap());
+				data.push_back(self.get_preview().unwrap());
 			}
 			ToolState::Standby => (),
 		}
@@ -139,7 +135,7 @@ impl Tool for FractalLineTool {
 		&mut self,
 		event: &druid::Event,
 		ctx: &mut druid::EventCtx,
-		data: &mut OrdSet<RenderObject>,
+		data: &mut Vector<RenderObject>,
 	) {
 		match event {
 			druid::Event::MouseDown(event) => self.on_mouse_down(event, ctx, data),
@@ -151,10 +147,7 @@ impl Tool for FractalLineTool {
 
 	fn get_preview(&self) -> Option<RenderObject> {
 		match self.state {
-			ToolState::Drawing => Some(RenderObject::new(
-				u32::MAX,
-				Drawable::FractalLine(self.preview),
-			)),
+			ToolState::Drawing => Some(RenderObject::new(Drawable::FractalLine(self.preview))),
 			ToolState::Standby => None,
 		}
 	}

@@ -1,14 +1,14 @@
 use super::FractalLineTool;
 use super::SelectionTool;
 use crate::render_objects::RenderObject;
-use druid::{im::OrdSet, Data, Event, EventCtx};
+use druid::{im::Vector, Data, Event, EventCtx};
 use druid_enums::Matcher;
 use trait_enum::trait_enum;
 
 pub trait Tool {
-	fn enable(&mut self, data: &mut OrdSet<RenderObject>);
-	fn disable(&mut self, data: &mut OrdSet<RenderObject>);
-	fn event(&mut self, event: &Event, ctx: &mut EventCtx, data: &mut OrdSet<RenderObject>);
+	fn enable(&mut self, data: &mut Vector<RenderObject>);
+	fn disable(&mut self, data: &mut Vector<RenderObject>);
+	fn event(&mut self, event: &Event, ctx: &mut EventCtx, data: &mut Vector<RenderObject>);
 
 	fn get_preview(&self) -> Option<RenderObject>;
 

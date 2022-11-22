@@ -1,4 +1,4 @@
-use druid::{im::OrdSet, Affine, Color, Event, Point, Rect, RenderContext, Size, Widget};
+use druid::{im::Vector, Affine, Color, Data, Event, Point, Rect, RenderContext, Size, Widget};
 
 use super::graphics_data::GraphicsData;
 
@@ -156,15 +156,7 @@ impl Widget<GraphicsData> for GraphicsWidget {
 				}
 				Event::KeyDown(e) => {
 					if e.code == druid::Code::Backspace {
-						let mut to_delete = Vec::new();
-						for object in data.objects.iter() {
-							if object.is_selected() {
-								to_delete.push(object.clone());
-							}
-						}
-						for object in to_delete {
-							data.objects = data.objects.without(&object);
-						}
+						data.objects.retain(|object| !object.is_selected());
 					}
 				}
 				_ => (),
@@ -196,20 +188,26 @@ impl Widget<GraphicsData> for GraphicsWidget {
 			return;
 		}
 
-		for diff in old_data.objects.diff(&data.objects) {
-			match diff {
-				druid::im::ordset::DiffItem::Remove(item)
-				| druid::im::ordset::DiffItem::Add(item) => {
+		for (new, old) in data.objects.iter().zip(&old_data.objects) {
+			if new.same(old) {
+				ctx.request_paint_rect(to_widget.transform_rect_bbox(old.get_drawable().AABB()));
+				ctx.request_paint_rect(to_widget.transform_rect_bbox(new.get_drawable().AABB()));
+			}
+		}
+
+		match data.objects.len().cmp(&old_data.objects.len()) {
+			std::cmp::Ordering::Less => {
+				for obj in data.objects.iter().skip(old_data.objects.len()) {
 					ctx.request_paint_rect(
-						to_widget.transform_rect_bbox(item.get_drawable().AABB()),
+						to_widget.transform_rect_bbox(obj.get_drawable().AABB()),
 					);
 				}
-				druid::im::ordset::DiffItem::Update { old, new } => {
+			}
+			std::cmp::Ordering::Equal => (),
+			std::cmp::Ordering::Greater => {
+				for obj in old_data.objects.iter().skip(data.objects.len()) {
 					ctx.request_paint_rect(
-						to_widget.transform_rect_bbox(old.get_drawable().AABB()),
-					);
-					ctx.request_paint_rect(
-						to_widget.transform_rect_bbox(new.get_drawable().AABB()),
+						to_widget.transform_rect_bbox(obj.get_drawable().AABB()),
 					);
 				}
 			}
@@ -248,14 +246,14 @@ impl Widget<GraphicsData> for GraphicsWidget {
 		// Transform our entire draw context into widget-space
 		ctx.transform(to_widget_space);
 
-		let mut redraw_needed = OrdSet::new();
+		let mut redraw_needed = Vector::new();
 		for object in data.objects.iter() {
 			if !to_widget_space
 				.transform_rect_bbox(object.get_drawable().AABB())
 				.intersect(ctx.region().bounding_box())
 				.is_empty()
 			{
-				redraw_needed.insert(object);
+				redraw_needed.push_back(object);
 			}
 		}
 

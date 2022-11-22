@@ -1,7 +1,8 @@
 use super::tool::Tool;
+use druid::im::Vector;
 use druid::kurbo::Shape;
 use druid::widget::{Flex, Label};
-use druid::{im::OrdSet, Data, Event, Lens, Point, Rect, Widget};
+use druid::{Data, Event, Lens, Point, Rect, Widget};
 
 use crate::render_objects::drawable::DrawableObj;
 use crate::render_objects::{selection_rect::SelectionRect, RenderObject};
@@ -28,9 +29,9 @@ impl SelectionTool {
 		}
 	}
 
-	fn update_selected(&self, data: &mut OrdSet<RenderObject>) {
+	fn update_selected(&self, data: &mut Vector<RenderObject>) {
 		let bound = Rect::from_points(self.start_coord, self.end_coord);
-		'outer: for item in &data.clone() {
+		'outer: for item in data.iter_mut() {
 			if !bound.intersect(item.drawable.AABB()).is_empty() {
 				for segment in item.drawable.fine_collision_shape(5.0).segments() {
 					match segment {
@@ -38,10 +39,7 @@ impl SelectionTool {
 							for check in bound.path_segments(0.01) {
 								if !check.intersect_line(l).is_empty() {
 									if !item.is_selected() {
-										let mut new_item = *item;
-										new_item.select();
-										data.remove(item);
-										data.insert(new_item);
+										item.select();
 									}
 									continue 'outer;
 								}
@@ -53,10 +51,7 @@ impl SelectionTool {
 			}
 
 			if item.is_selected() {
-				let mut new_item = *item;
-				new_item.deselect();
-				data.remove(item);
-				data.insert(new_item);
+				item.deselect();
 			}
 		}
 	}
@@ -67,15 +62,15 @@ impl SelectionTool {
 }
 
 impl Tool for SelectionTool {
-	fn enable(&mut self, _data: &mut OrdSet<RenderObject>) {}
+	fn enable(&mut self, _data: &mut Vector<RenderObject>) {}
 
-	fn disable(&mut self, _data: &mut OrdSet<RenderObject>) {}
+	fn disable(&mut self, _data: &mut Vector<RenderObject>) {}
 
 	fn event(
 		&mut self,
 		event: &druid::Event,
 		_ctx: &mut druid::EventCtx,
-		data: &mut OrdSet<RenderObject>,
+		data: &mut Vector<RenderObject>,
 	) {
 		match event {
 			Event::MouseDown(e) => {
@@ -96,13 +91,9 @@ impl Tool for SelectionTool {
 
 	fn get_preview(&self) -> Option<RenderObject> {
 		match self.state {
-			SelectionState::Selecting => Some(RenderObject::new(
-				u32::MAX,
-				DrawableObj::SelectionRect(SelectionRect::new(Rect::from_points(
-					self.start_coord,
-					self.end_coord,
-				))),
-			)),
+			SelectionState::Selecting => Some(RenderObject::new(DrawableObj::SelectionRect(
+				SelectionRect::new(Rect::from_points(self.start_coord, self.end_coord)),
+			))),
 			SelectionState::Standby => None,
 		}
 	}
