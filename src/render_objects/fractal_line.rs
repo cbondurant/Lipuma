@@ -84,10 +84,6 @@ impl FractalLinePathIter {
 		let dir = line_data.start - line_data.end;
 		let real_length = dir.to_point().distance(Point::ZERO);
 		let perpendicular = Vec2::new(dir.y, -dir.x).normalize();
-		println!(
-			"segments: {}",
-			((real_length / line_data.wavelength) / resolution)
-		);
 		Self {
 			i: 0,
 			segments: ((real_length / line_data.wavelength) / resolution),
